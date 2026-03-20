@@ -1,138 +1,138 @@
-# muxrun アーキテクチャ設計書
+# muxrun Architecture
 
-## 1. 技術スタック
+## 1. Tech Stack
 
-### 言語・ランタイム
+### Language & Runtime
 
 - **Go 1.22+**
 
-### 外部依存ライブラリ
+### External Dependencies
 
-| ライブラリ | バージョン | 用途 | 選定理由 |
-|-----------|-----------|------|----------|
-| `pelletier/go-toml/v2` | v2.2.0 | TOML パース | TOML 1.0 準拠、詳細なエラーメッセージ、活発なメンテナンス |
-| `urfave/cli/v2` | v2.27.0 | CLI フレームワーク | ゼロ依存、サブコマンド・エイリアス・ヘルプ生成が組み込み済み |
-| `fsnotify/fsnotify` | v1.7.0 | ファイル監視 | デファクトスタンダード、クロスプラットフォーム対応 |
+| Library | Version | Purpose | Rationale |
+|---------|---------|---------|-----------|
+| `pelletier/go-toml/v2` | v2.2.0 | TOML parsing | TOML 1.0 compliant, detailed error messages, actively maintained |
+| `urfave/cli/v2` | v2.27.0 | CLI framework | Zero dependencies, built-in subcommands, aliases, and help generation |
+| `fsnotify/fsnotify` | v1.7.0 | File watching | De facto standard, cross-platform support |
 
-### 標準ライブラリで対応する機能
+### Standard Library Usage
 
-| 機能 | 使用パッケージ |
-|------|---------------|
-| 正規表現（exclude パターン） | `regexp` |
-| パス展開（`~` → ホームディレクトリ） | `os.UserHomeDir()` |
-| テーブル出力（ps コマンド） | `text/tabwriter` |
-| 外部コマンド実行（tmux, fzf） | `os/exec` |
-| テスト | `testing`, `cmp` |
+| Feature | Package |
+|---------|---------|
+| Regex (exclude patterns) | `regexp` |
+| Path expansion (`~` → home directory) | `os.UserHomeDir()` |
+| Table output (ps command) | `text/tabwriter` |
+| External command execution (tmux, fzf) | `os/exec` |
+| Testing | `testing`, `cmp` |
 
 ---
 
-## 2. ディレクトリ構造
+## 2. Directory Structure
 
 ```
 muxrun/
-├── main.go                     # エントリーポイント（最小限）
+├── main.go                     # Entry point (minimal)
 ├── go.mod
 ├── go.sum
 │
-├── cmd/                        # CLI コマンド定義
-│   ├── root.go                 # ルートコマンド、共通設定
-│   ├── check.go                # check サブコマンド
-│   ├── ps.go                   # ps サブコマンド
-│   ├── up.go                   # up サブコマンド
-│   ├── down.go                 # down サブコマンド
-│   └── daemon.go               # _daemon サブコマンド（hidden）
+├── cmd/                        # CLI command definitions
+│   ├── root.go                 # Root command, shared config
+│   ├── check.go                # check subcommand
+│   ├── ps.go                   # ps subcommand
+│   ├── up.go                   # up subcommand
+│   ├── down.go                 # down subcommand
+│   └── daemon.go               # _daemon subcommand (hidden)
 │
-├── internal/                   # 非公開パッケージ
-│   ├── config/                 # 設定ファイル関連
-│   │   ├── config.go           # Config 構造体、TOML パース
+├── internal/                   # Private packages
+│   ├── config/                 # Configuration
+│   │   ├── config.go           # Config struct, TOML parsing
 │   │   ├── config_test.go
-│   │   ├── validator.go        # バリデーションロジック
+│   │   ├── validator.go        # Validation logic
 │   │   └── validator_test.go
 │   │
-│   ├── tmux/                   # tmux 操作
-│   │   ├── client.go           # tmux コマンドラッパー
+│   ├── tmux/                   # tmux operations
+│   │   ├── client.go           # tmux command wrapper
 │   │   ├── client_test.go
-│   │   ├── session.go          # セッション管理
-│   │   └── window.go           # ウィンドウ管理
+│   │   ├── session.go          # Session management
+│   │   └── window.go           # Window management
 │   │
-│   ├── watcher/                # ファイル監視
-│   │   ├── watcher.go          # ファイル監視実装
+│   ├── watcher/                # File watching
+│   │   ├── watcher.go          # File watch implementation
 │   │   ├── watcher_test.go
-│   │   ├── debouncer.go        # デバウンス処理
-│   │   └── filter.go           # exclude パターンフィルタ
+│   │   ├── debouncer.go        # Debounce logic
+│   │   └── filter.go           # Exclude pattern filter
 │   │
-│   ├── daemon/                 # ファイル監視 daemon
-│   │   ├── daemon.go           # daemon のスポーン・メインループ
-│   │   └── pidfile.go          # PID ファイル管理
+│   ├── daemon/                 # File watch daemon
+│   │   ├── daemon.go           # Daemon spawning & main loop
+│   │   └── pidfile.go          # PID file management
 │   │
-│   ├── runner/                 # アプリケーション実行管理
-│   │   ├── runner.go           # Up/Down/Status オーケストレーション
+│   ├── runner/                 # Application execution management
+│   │   ├── runner.go           # Up/Down/Status orchestration
 │   │   ├── runner_test.go
-│   │   └── process.go          # プロセス管理（SIGTERM/SIGKILL）
+│   │   └── process.go          # Process management (SIGTERM/SIGKILL)
 │   │
-│   ├── selector/               # fzf 連携
-│   │   ├── fzf.go              # fzf インタラクティブ選択
+│   ├── selector/               # fzf integration
+│   │   ├── fzf.go              # fzf interactive selection
 │   │   └── fzf_test.go
 │   │
-│   └── ui/                     # 出力フォーマット
-│       └── table.go            # テーブル形式出力
+│   └── ui/                     # Output formatting
+│       └── table.go            # Table format output
 │
-├── docs/                       # ドキュメント
+├── docs/                       # Documentation
 │   ├── SPECIFICATION.md
 │   └── ARCHITECTURE.md
 │
-└── testdata/                   # テスト用フィクスチャ
+└── testdata/                   # Test fixtures
     ├── valid_config.toml
     ├── invalid_syntax.toml
     └── missing_required.toml
 ```
 
-### 構造の根拠
+### Rationale
 
-- **`cmd/`**: サブコマンドごとにファイル分離。責務が明確で保守性向上
-- **`internal/`**: Go の言語仕様により外部からインポート不可。API 安定性を気にせずリファクタリング可能
-- **機能単位のパッケージ**: `config`, `tmux`, `watcher`, `daemon`, `runner`, `selector` と責務ごとに分離
+- **`cmd/`**: One file per subcommand. Clear separation of concerns improves maintainability.
+- **`internal/`**: Go's language-level import restriction prevents external use. Allows free refactoring without API stability concerns.
+- **Feature-based packages**: `config`, `tmux`, `watcher`, `daemon`, `runner`, `selector` — each package has a single responsibility.
 
 ---
 
-## 3. レイヤーアーキテクチャ
+## 3. Layered Architecture
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                   cmd/ (CLI Layer)              │
-│  - コマンドライン引数のパース                      │
-│  - ユーザー入力のバリデーション                    │
-│  - 出力フォーマット                               │
-│  - daemon のスポーン・停止制御                     │
+│                   cmd/ (CLI Layer)               │
+│  - Command-line argument parsing                 │
+│  - User input validation                         │
+│  - Output formatting                             │
+│  - Daemon spawn/stop control                     │
 └─────────────────────┬───────────────────────────┘
                       │
                       ▼
 ┌──────────────────────────┐  ┌────────────────────────────┐
 │ internal/runner/         │  │ internal/daemon/            │
 │ (Application)            │  │ (File Watch Daemon)         │
-│ - アプリ起動・停止        │  │ - daemon プロセスのスポーン   │
-│ - 複数アプリの並行制御    │  │ - PID ファイル管理           │
-└───────┬──────────────────┘  │ - ファイル変更→アプリ再起動  │
+│ - App start/stop         │  │ - Daemon process spawning   │
+│ - Concurrent app control │  │ - PID file management       │
+└───────┬──────────────────┘  │ - File change → app restart │
         │                     └──────┬─────────────────────┘
         │                            │
         ▼                            ▼
 ┌───────────────┐  ┌───────────────┐  ┌───────────────┐
 │ internal/tmux │  │internal/watcher│ │internal/config│
-│ - Session管理  │  │ - ファイル監視  │ │ - TOML パース  │
-│ - Window管理   │  │ - デバウンス    │ │ - バリデーション│
+│ - Session mgmt│  │ - File watching│ │ - TOML parsing │
+│ - Window mgmt │  │ - Debouncing   │ │ - Validation   │
 └───────────────┘  └───────────────┘  └───────────────┘
 ```
 
-### 依存方向
+### Dependency Direction
 
 - `cmd/` → `internal/runner/`, `internal/daemon/`, `internal/config/`, `internal/selector/`
 - `internal/runner/` → `internal/tmux/`, `internal/config/`
 - `internal/daemon/` → `internal/tmux/`, `internal/watcher/`, `internal/config/`, `internal/runner/`
-- 各 `internal/` パッケージは互いに疎結合（`daemon` は `runner` の `process.go` ユーティリティのみ参照）
+- Each `internal/` package is loosely coupled (`daemon` only references `runner`'s `process.go` utilities)
 
 ---
 
-## 4. 主要インターフェース
+## 4. Key Interfaces
 
 ### 4.1 Config
 
@@ -160,12 +160,12 @@ type WatchConfig struct {
     Exclude []string
 }
 
-// Loader は設定ファイルを読み込む
+// Loader loads a config file
 type Loader interface {
     Load(path string) (*Config, error)
 }
 
-// Validator は設定を検証する
+// Validator validates a config
 type Validator interface {
     Validate(cfg *Config) error
 }
@@ -177,19 +177,19 @@ type Validator interface {
 // internal/tmux/client.go
 
 type Client interface {
-    // セッション操作
+    // Session operations
     HasSession(name string) (bool, error)
     NewSession(name string) error
     KillSession(name string) error
     ListSessions() ([]Session, error)
 
-    // ウィンドウ操作
+    // Window operations
     NewWindow(session, window, dir string) error
     KillWindow(session, window string) error
     ListWindows(session string) ([]Window, error)
     SendKeys(session, window, keys string) error
 
-    // 状態取得
+    // State queries
     GetPanePID(session, window string) (int, error)
 }
 
@@ -286,11 +286,11 @@ type AppOption struct {
 
 ---
 
-## 5. Daemon アーキテクチャ
+## 5. Daemon Architecture
 
-### グループごとに独立した daemon プロセス
+### Independent daemon process per group
 
-`muxrun up` でファイル監視が必要なグループごとに、個別の daemon プロセスをスポーンする設計を採用している。
+`muxrun up` spawns a separate daemon process for each group that requires file watching.
 
 ```
 muxrun up
@@ -298,49 +298,49 @@ muxrun up
   └── daemon (group: backend)    ← PID 5678
 ```
 
-**設計判断の理由:**
+**Design rationale:**
 
-| 観点 | グループ単位 daemon（採用） | 単一 daemon |
-|------|---------------------------|-------------|
-| ライフサイクル管理 | `up`/`down` がグループ単位で完結。kill → respawn するだけ | 設定のホットリロードや部分更新ロジックが必要 |
-| 障害分離 | 1 プロセスのクラッシュが他グループに波及しない | 全グループが道連れ |
-| 実装の単純さ | `Spawn()` / `StopDaemon()` が PID ファイル1つで管理可能 | プロセス内でグループの動的追加・削除を管理する必要がある |
+| Aspect | Per-group daemon (chosen) | Single daemon |
+|--------|--------------------------|---------------|
+| Lifecycle management | `up`/`down` is self-contained per group. Just kill → respawn | Requires config hot-reload and partial update logic |
+| Fault isolation | One process crash doesn't affect other groups | All groups go down together |
+| Implementation simplicity | `Spawn()` / `StopDaemon()` managed with a single PID file | Must manage dynamic addition/removal of groups within a single process |
 
-### スポーンの仕組み
+### Spawn mechanism
 
-`Spawn()` は自分自身の実行ファイルを hidden サブコマンド `_daemon` で再起動する。
+`Spawn()` re-executes its own binary with the hidden `_daemon` subcommand.
 
 ```
 muxrun up
   → Spawn(configPath, groupName)
     → exec.Command(self, "_daemon", "--config", ..., "--group", ...)
-    → Setsid: true      ← 新セッションで親から切り離し
+    → Setsid: true      ← New session, detached from parent
     → stdin/stdout/stderr → /dev/null
     → WritePID()         ← /tmp/muxrun/daemon-{group}.pid
 ```
 
-`Setsid: true` により、`muxrun up` コマンドが終了しても daemon は生存し続ける。
+With `Setsid: true`, the daemon survives after the `muxrun up` command exits.
 
-### Debouncer（デバウンス処理）
+### Debouncer
 
-ファイル変更イベントは短時間に大量発生する（エディタの一時ファイル作成・リネーム等）。Debouncer は trailing edge debounce パターンでこれを間引く。
+File change events fire in rapid succession (editor temp files, renames, etc.). The debouncer uses a trailing-edge debounce pattern to coalesce them.
 
 ```
-ファイルイベント:  --A--B----C---------→
-Timer (500ms):   [==X [==X  [=========]→ callback 発火
-                  ↑リセット  ↑リセット   ↑500ms 経過
+File events:  --A--B----C---------→
+Timer (500ms): [==X [==X  [=========]→ callback fires
+                ↑reset    ↑reset     ↑500ms elapsed
 ```
 
-1. `Trigger()` のたびに既存 timer をキャンセルし、500ms の新 timer を開始
-2. 500ms 間新たな `Trigger()` がなければ callback が発火
-3. callback は tmux ウィンドウに `C-c` → 100ms 待機 → コマンド再送信でプロセスを再起動
-4. `sync.Mutex` で timer 操作をスレッドセーフに保護
+1. Each `Trigger()` cancels the existing timer and starts a new 500ms timer
+2. If no new `Trigger()` occurs within 500ms, the callback fires
+3. The callback sends `C-c` to the tmux window → waits 100ms → resends the command to restart the process
+4. `sync.Mutex` protects timer operations for thread safety
 
 ---
 
-## 6. エラーハンドリング
+## 6. Error Handling
 
-### センチネルエラー
+### Sentinel Errors
 
 ```go
 var (
@@ -356,7 +356,7 @@ var (
 )
 ```
 
-### カスタムエラー型
+### Custom Error Types
 
 ```go
 type ConfigSyntaxError struct {
@@ -374,68 +374,68 @@ func (e *ConfigSyntaxError) Unwrap() error {
 }
 ```
 
-### 終了コード
+### Exit Codes
 
-| コード | 意味 |
-|--------|------|
-| 0 | 正常終了 |
-| 1 | 一般的なエラー |
-| 2 | コマンドライン引数エラー |
-| 130 | ユーザーキャンセル（Ctrl+C, fzf キャンセル） |
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | General error |
+| 2 | Command-line argument error |
+| 130 | User cancellation (Ctrl+C, fzf cancel) |
 
 ---
 
-## 7. テスト戦略
+## 7. Testing Strategy
 
-### テストレベル
+### Test Levels
 
-| レベル | 対象 | ビルドタグ |
-|--------|------|-----------|
-| ユニットテスト | 各パッケージの関数 | なし |
-| 統合テスト | パッケージ間連携 | `integration` |
-| E2E テスト | 実際の tmux を使用 | `e2e` |
+| Level | Target | Build Tag |
+|-------|--------|-----------|
+| Unit tests | Individual package functions | None |
+| Integration tests | Cross-package interactions | `integration` |
+| E2E tests | Real tmux usage | `e2e` |
 
-### 実行方法
+### Running Tests
 
 ```bash
-# ユニットテスト
+# Unit tests
 go test ./...
 
-# 統合テスト
+# Integration tests
 go test -tags=integration ./...
 
-# E2E テスト
+# E2E tests
 go test -tags=e2e ./...
 ```
 
-### モック戦略
+### Mock Strategy
 
-- `internal/tmux/Client` インターフェースに対してモック実装を用意
-- テスト時に DI でモックを注入
-
----
-
-## 8. 命名規則
-
-### tmux リソース
-
-- セッション名: `muxrun-{group_name}`
-- ウィンドウ名: `{app_name}`
-
-### 設定ファイル
-
-- 場所: `~/.config/muxrun/config.toml`
-- グループ名・アプリ名: 英数字、ハイフン、アンダースコアのみ
+- Mock implementations for the `internal/tmux/Client` interface
+- Inject mocks via DI during testing
 
 ---
 
-## 9. 外部コマンド依存
+## 8. Naming Conventions
 
-| コマンド | 必須 | 用途 |
-|----------|------|------|
-| `tmux` | Yes | セッション・ウィンドウ管理 |
-| `fzf` | No | `--interactive` オプション使用時のみ |
+### tmux Resources
 
-### バージョン要件
+- Session name: `muxrun-{group_name}`
+- Window name: `{app_name}`
 
-- tmux: 3.0 以上（推奨）
+### Config File
+
+- Location: `~/.config/muxrun/config.toml`
+- Group and app names: alphanumeric characters, hyphens, and underscores only
+
+---
+
+## 9. External Command Dependencies
+
+| Command | Required | Purpose |
+|---------|----------|---------|
+| `tmux` | Yes | Session and window management |
+| `fzf` | No | Only for the `--interactive` option |
+
+### Version Requirements
+
+- tmux: 3.0 or later (recommended)

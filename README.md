@@ -1,10 +1,10 @@
 # muxrun
 
-tmux を利用して複数のアプリケーションをグループ単位で管理・起動する CLI ツール。
+A CLI tool that manages and launches multiple applications in groups using tmux.
 
-## 概要
+## Overview
 
-muxrun はグループとアプリケーションの 2 階層で複数プロセスを管理します。グループは tmux セッション、アプリケーションは tmux ウィンドウに対応し、設定ファイルに定義したコマンドを一括で起動・停止できます。
+muxrun manages multiple processes in a two-level hierarchy of groups and applications. Groups correspond to tmux sessions, and applications correspond to tmux windows. Commands defined in a config file can be started and stopped in bulk.
 
 ```
 muxrun
@@ -15,21 +15,21 @@ muxrun
     └── App 3 (= tmux window)
 ```
 
-## 必要要件
+## Requirements
 
 - Go 1.22+
 - tmux 3.0+
-- fzf（`--interactive` オプション使用時のみ）
+- fzf (only required for the `--interactive` option)
 
-## インストール
+## Installation
 
 ```bash
 go install github.com/tkuramot/muxrun@latest
 ```
 
-## 設定
+## Configuration
 
-設定ファイルを `~/.config/muxrun/config.toml` に作成します。
+Create a config file at `~/.config/muxrun/config.toml`.
 
 ```toml
 [[group]]
@@ -55,74 +55,74 @@ name = "frontend"
   dir = "~/projects/frontend"
 ```
 
-### フィールド
+### Fields
 
-| フィールド | 型 | 必須 | 説明 |
-|-----------|------|------|------|
-| `group.name` | string | Yes | グループ名（tmux セッション名） |
-| `group.app.name` | string | Yes | アプリ名（tmux ウィンドウ名） |
-| `group.app.cmd` | string | Yes | 実行コマンド |
-| `group.app.dir` | string | Yes | 実行ディレクトリ |
-| `group.app.watch` | object | No | ファイル監視設定（デフォルト: 無効） |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `group.name` | string | Yes | Group name (used as tmux session name) |
+| `group.app.name` | string | Yes | App name (used as tmux window name) |
+| `group.app.cmd` | string | Yes | Command to execute |
+| `group.app.dir` | string | Yes | Working directory |
+| `group.app.watch` | object | No | File watch config (default: disabled) |
 
-### watch 設定
+### Watch Configuration
 
 ```toml
-# 監視有効
+# Enable watching
 watch = { enabled = true }
 
-# 監視有効 + 除外パターン（正規表現）
+# Enable watching with exclude patterns (regex)
 watch = { enabled = true, exclude = ["_test\\.go$", "testdata/"] }
 ```
 
-ファイル変更を検知するとアプリケーションを自動再起動します。watch が有効なグループでは `muxrun up` 時にバックグラウンド daemon が自動起動し、`muxrun down` 時に自動停止します。
+When file changes are detected, the application is automatically restarted. For groups with watch enabled, a background daemon is automatically started on `muxrun up` and stopped on `muxrun down`.
 
-daemon のログは `$TMPDIR/muxrun/daemon-<グループ名>.log`、PID ファイルは `$TMPDIR/muxrun/daemon-<グループ名>.pid` に保存されます。
+Daemon logs are stored at `$TMPDIR/muxrun/daemon-<group>.log` and PID files at `$TMPDIR/muxrun/daemon-<group>.pid`.
 
-## 使い方
+## Usage
 
-### 設定ファイルの検証
+### Validate config file
 
 ```bash
 muxrun check
 ```
 
-### アプリケーションの起動
+### Start applications
 
 ```bash
-# 全グループ・全アプリを起動
+# Start all groups and apps
 muxrun up
 
-# 特定グループの全アプリを起動
+# Start all apps in a specific group
 muxrun up backend
 
-# 複数グループを起動
+# Start multiple groups
 muxrun up backend frontend
 
-# ディレクトリを上書き指定
+# Override working directory
 muxrun up backend --dir ~/projects/other-app
 
-# fzf でインタラクティブに選択
+# Select interactively with fzf
 muxrun up -i
 ```
 
-### アプリケーションの停止
+### Stop applications
 
 ```bash
-# 全グループ・全アプリを停止
+# Stop all groups and apps
 muxrun down
 
-# 特定グループの全アプリを停止
+# Stop all apps in a specific group
 muxrun down backend
 
-# 複数グループを停止
+# Stop multiple groups
 muxrun down backend frontend
 
-# fzf でインタラクティブに選択
+# Select interactively with fzf
 muxrun down -i
 ```
 
-### ステータス確認
+### Check status
 
 ```bash
 $ muxrun ps
@@ -132,57 +132,57 @@ backend     worker    running   12346
 frontend    dev       stopped   -
 ```
 
-## tmux セッションの操作
+## Working with tmux Sessions
 
-muxrun が起動したプロセスは tmux セッション内で動作しています。セッション名は `muxrun-<グループ名>` の形式です。
+Processes launched by muxrun run inside tmux sessions. Session names follow the format `muxrun-<group>`.
 
-### セッションへのアタッチ
+### Attaching to a session
 
 ```bash
-# backend グループのセッションにアタッチ
+# Attach to the backend group session
 tmux attach -t muxrun-backend
 ```
 
-アタッチ後は通常の tmux 操作が可能です。
+Once attached, you can use standard tmux operations.
 
-### tmux 基本操作（プレフィックスキーはデフォルトで `Ctrl-b`）
+### Basic tmux operations (default prefix key: `Ctrl-b`)
 
-| 操作 | キー | 説明 |
-|------|------|------|
-| ウィンドウ切り替え（次） | `Ctrl-b` `n` | 次のアプリ（ウィンドウ）に移動 |
-| ウィンドウ切り替え（前） | `Ctrl-b` `p` | 前のアプリ（ウィンドウ）に移動 |
-| ウィンドウ一覧 | `Ctrl-b` `w` | ウィンドウを一覧表示して選択 |
-| デタッチ | `Ctrl-b` `d` | セッションから抜ける（プロセスは継続） |
-| スクロールモード | `Ctrl-b` `[` | ログをスクロールして確認（`q` で終了） |
+| Action | Key | Description |
+|--------|-----|-------------|
+| Next window | `Ctrl-b` `n` | Switch to the next app (window) |
+| Previous window | `Ctrl-b` `p` | Switch to the previous app (window) |
+| Window list | `Ctrl-b` `w` | List all windows and select |
+| Detach | `Ctrl-b` `d` | Detach from session (processes keep running) |
+| Scroll mode | `Ctrl-b` `[` | Scroll through logs (`q` to exit) |
 
-### セッション・ウィンドウの確認
+### Listing sessions and windows
 
 ```bash
-# muxrun が管理しているセッション一覧
+# List muxrun-managed sessions
 tmux list-sessions | grep muxrun-
 
-# 特定セッションのウィンドウ（アプリ）一覧
+# List windows (apps) in a specific session
 tmux list-windows -t muxrun-backend
 ```
 
-### 注意事項
+### Notes
 
-- セッションやウィンドウの停止には `muxrun down` を使用してください。`tmux kill-session` で直接終了するとファイル監視 daemon が残り続ける場合があります。
-- アタッチ中にウィンドウ内でプロセスを手動停止した場合も、`muxrun ps` のステータスに反映されます。
+- Use `muxrun down` to stop sessions and windows. Killing sessions directly with `tmux kill-session` may leave file watch daemons running.
+- If you manually stop a process inside an attached window, `muxrun ps` will reflect the updated status.
 
-## 開発
+## Development
 
 ```bash
-# ユニットテスト
+# Unit tests
 go test ./...
 
-# 統合テスト
+# Integration tests
 go test -tags=integration ./...
 
-# E2E テスト
+# E2E tests
 go test -tags=e2e ./...
 ```
 
-## ライセンス
+## License
 
 MIT

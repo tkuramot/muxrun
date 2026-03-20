@@ -1,12 +1,12 @@
-# muxrun 仕様書
+# muxrun Specification
 
-## 概要
+## Overview
 
-muxrun は tmux を利用して複数のアプリケーションをグループ単位で管理・起動する CLI ツール。
+muxrun is a CLI tool that manages and launches multiple applications in groups using tmux.
 
-## 基本概念
+## Core Concepts
 
-### 構造
+### Structure
 
 ```
 muxrun
@@ -17,41 +17,41 @@ muxrun
     └── App 3 (= tmux window)
 ```
 
-- **グループ**: tmux セッションに対応。関連するアプリケーションをまとめる単位
-- **アプリケーション**: tmux ウィンドウに対応。実際に実行されるプロセス
+- **Group**: Corresponds to a tmux session. A unit for organizing related applications.
+- **Application**: Corresponds to a tmux window. The actual process being executed.
 
-### ディレクトリ指定
+### Directory Specification
 
-アプリケーションごとに `dir` を指定する（必須）。CLI の `--dir` オプションで上書き可能。
+Each application requires a `dir` field. This can be overridden with the CLI `--dir` option.
 
-### watch 機能
+### Watch Feature
 
-- 指定したアプリケーションの実行ディレクトリ以下を監視
-- ファイル変更を検知するとアプリケーションを自動再起動
-- アプリケーション単位で `watch = true` を指定して有効化
+- Monitors files under the application's working directory
+- Automatically restarts the application when file changes are detected
+- Enabled per application with `watch = true`
 
 ---
 
-## 設定ファイル
+## Config File
 
-### 場所
+### Location
 
 ```
 ~/.config/muxrun/config.toml
 ```
 
-### 構造
+### Structure
 
 ```toml
-# グループ定義（1つ以上必須）
+# Group definition (at least one required)
 [[group]]
-name = "backend"            # グループ名（必須、tmux セッション名になる）
+name = "backend"            # Group name (required, used as tmux session name)
 
-  # アプリケーション定義（1つ以上必須）
+  # Application definition (at least one per group required)
   [[group.app]]
-  name = "api"              # アプリ名（必須、tmux ウィンドウ名になる）
-  cmd = "go run main.go"    # 実行コマンド（必須）
-  dir = "~/projects/myapp/cmd/api"  # 実行ディレクトリ（必須）
+  name = "api"              # App name (required, used as tmux window name)
+  cmd = "go run main.go"    # Command to execute (required)
+  dir = "~/projects/myapp/cmd/api"  # Working directory (required)
   watch = { enabled = true, exclude = ["_test\\.go$", "mock_.*\\.go$"] }
 
   [[group.app]]
@@ -69,50 +69,50 @@ name = "frontend"
   dir = "~/projects/frontend"
 ```
 
-### フィールド定義
+### Field Definitions
 
-#### グループ (`[[group]]`)
+#### Group (`[[group]]`)
 
-| フィールド | 型 | 必須 | 説明 |
-|-----------|------|------|------|
-| `name` | string | Yes | グループ名。tmux セッション名として使用 |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Group name. Used as the tmux session name |
 
-#### アプリケーション (`[[group.app]]`)
+#### Application (`[[group.app]]`)
 
-| フィールド | 型 | 必須 | 説明 |
-|-----------|------|------|------|
-| `name` | string | Yes | アプリ名。tmux ウィンドウ名として使用 |
-| `cmd` | string | Yes | 実行コマンド |
-| `dir` | string | Yes | 実行ディレクトリ |
-| `watch` | bool \| object | No | ファイル監視設定。デフォルト false |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | App name. Used as the tmux window name |
+| `cmd` | string | Yes | Command to execute |
+| `dir` | string | Yes | Working directory |
+| `watch` | bool \| object | No | File watch config. Default: false |
 
-#### watch オプション
+#### Watch Options
 
-`watch` は以下の形式で指定可能:
+`watch` can be specified in the following formats:
 
-- `watch = false` — 監視無効（デフォルト）
-- `watch = { enabled = true }` — 監視有効（除外パターンなし）
-- `watch = { enabled = true, exclude = [...] }` — 監視有効（除外パターンあり）
+- `watch = false` — Disabled (default)
+- `watch = { enabled = true }` — Enabled (no exclude patterns)
+- `watch = { enabled = true, exclude = [...] }` — Enabled (with exclude patterns)
 
-| フィールド | 型 | 必須 | 説明 |
-|-----------|------|------|------|
-| `enabled` | bool | Yes | ファイル監視の有効/無効 |
-| `exclude` | string[] | No | 除外するファイルパターン（正規表現）。デフォルト空 |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `enabled` | bool | Yes | Enable/disable file watching |
+| `exclude` | string[] | No | File patterns to exclude (regex). Default: empty |
 
-### ディレクトリの解決順序
+### Directory Resolution Order
 
-アプリケーションの実行ディレクトリ:
+Application working directory:
 
-1. `--dir <path>` が指定されている → その値を使用
-2. 未指定 → config のアプリの `dir` を使用
+1. If `--dir <path>` is specified → use that value
+2. Otherwise → use the app's `dir` from config
 
 ---
 
-## CLI コマンド
+## CLI Commands
 
 ### `muxrun check`
 
-設定ファイルの構文と必須項目を検証する。
+Validates the config file syntax and required fields.
 
 ```bash
 $ muxrun check
@@ -124,17 +124,17 @@ config: syntax error at line 15: unexpected character
 config: test failed
 ```
 
-**検証内容:**
-- TOML 構文の正当性
-- 必須フィールドの存在（グループ名、アプリ名、アプリ dir、cmd）
-- グループが1つ以上存在すること
-- 各グループにアプリが1つ以上存在すること
-- グループ名・アプリ名の重複がないこと
-- グループ名・アプリ名が命名規則に従っていること
+**Validations:**
+- TOML syntax correctness
+- Required fields exist (group name, app name, app dir, cmd)
+- At least one group exists
+- Each group has at least one app
+- No duplicate group or app names
+- Group and app names follow naming conventions
 
 ### `muxrun ps`
 
-起動中のアプリケーション一覧を表示。
+Displays running application status.
 
 ```
 $ muxrun ps
@@ -146,150 +146,149 @@ frontend    dev       stopped   -
 
 ### `muxrun up`
 
-アプリケーションを起動。
+Starts applications.
 
 ```bash
-# 全グループ・全アプリを起動
+# Start all groups and apps
 muxrun up
 
-# 特定グループの全アプリを起動
+# Start all apps in a specific group
 muxrun up backend
 
-# 複数グループを起動
+# Start multiple groups
 muxrun up backend frontend
 
-# CLI でディレクトリを上書き指定
+# Override working directory
 muxrun up backend --dir ~/projects/other-app
 
-# fzf でインタラクティブにアプリを選択
+# Select interactively with fzf
 muxrun up --interactive
 muxrun up -i
 ```
 
-**オプション:**
+**Options:**
 
-| オプション | 短縮形 | 説明 |
-|-----------|--------|------|
-| `--dir <path>` | なし | 実行ディレクトリを明示的に指定（config の dir を上書き） |
-| `--interactive` | `-i` | fzf でアプリを対話的に選択 |
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--dir <path>` | — | Explicitly set working directory (overrides config dir) |
+| `--interactive` | `-i` | Select apps interactively with fzf |
 
-**位置引数:** `[group...]` — 対象グループ名を指定（省略時は全グループ）
+**Positional arguments:** `[group...]` — Target group names (all groups if omitted)
 
-**挙動:**
-- 引数なし: 全グループ・全アプリを起動
-- グループ名を指定: そのグループ内の全アプリを起動
-- 複数グループ名を指定: 各グループ内の全アプリを起動
-- `--dir` 指定: config の dir を上書き
-- `--interactive` 指定: fzf で対象を選択（複数選択可）
-- 既に起動中のアプリを指定: **エラー**
+**Behavior:**
+- No arguments: start all groups and apps
+- Group name specified: start all apps in that group
+- Multiple group names: start all apps in each group
+- `--dir` specified: override config dir
+- `--interactive` specified: select targets with fzf (multi-select)
+- App already running: **error**
 
 ### `muxrun down`
 
-アプリケーションを停止。
+Stops applications.
 
 ```bash
-# 全グループ・全アプリを停止
+# Stop all groups and apps
 muxrun down
 
-# 特定グループの全アプリを停止
+# Stop all apps in a specific group
 muxrun down backend
 
-# 複数グループを停止
+# Stop multiple groups
 muxrun down backend frontend
 
-# fzf でインタラクティブにアプリを選択
+# Select interactively with fzf
 muxrun down --interactive
 muxrun down -i
 ```
 
-**オプション:**
+**Options:**
 
-| オプション | 短縮形 | 説明 |
-|-----------|--------|------|
-| `--interactive` | `-i` | fzf でアプリを対話的に選択 |
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--interactive` | `-i` | Select apps interactively with fzf |
 
-**位置引数:** `[group...]` — 対象グループ名を指定（省略時は全グループ）
+**Positional arguments:** `[group...]` — Target group names (all groups if omitted)
 
-**挙動:**
-- 引数なし: 全グループ・全アプリを停止、全セッション終了
-- グループ名を指定: そのグループ内の全アプリを停止、セッション終了
-- 複数グループ名を指定: 各グループの全アプリを停止、セッション終了
-- `--interactive` 指定: fzf で対象を選択（複数選択可）
-- 停止済みのアプリを指定: 無視（正常終了）
-
----
-
-## tmux セッション管理
-
-### 命名規則
-
-- セッション名: `muxrun-{group_name}`
-- ウィンドウ名: `{app_name}`
-
-### ライフサイクル
-
-1. `muxrun up group`: セッション `muxrun-group` を作成（存在しなければ）
-2. 各アプリに対応するウィンドウを作成し、コマンドを実行
-3. `muxrun down group`: 全ウィンドウを閉じ、セッションを終了
-4. `muxrun down group app`: 該当ウィンドウのみ閉じる。最後のウィンドウならセッションも終了
+**Behavior:**
+- No arguments: stop all groups and apps, terminate all sessions
+- Group name specified: stop all apps in that group, terminate session
+- Multiple group names: stop all apps in each group, terminate sessions
+- `--interactive` specified: select targets with fzf (multi-select)
+- App already stopped: ignored (exits successfully)
 
 ---
 
-## watch 機能詳細
+## tmux Session Management
 
-### 監視対象
+### Naming Convention
 
-- アプリケーションの実行ディレクトリ以下の全ファイル
-- 隠しファイル・ディレクトリは除外（`.git`, `node_modules` など）
-- `exclude` で指定した正規表現パターンにマッチするファイルは除外
+- Session name: `muxrun-{group_name}`
+- Window name: `{app_name}`
 
-### exclude パターン
+### Lifecycle
 
-- 正規表現（Go の `regexp` パッケージ構文）で指定
-- 複数パターンを配列で指定可能
-- ファイルの相対パス（実行ディレクトリからの相対）に対してマッチング
-- いずれかのパターンにマッチしたファイルは監視対象から除外
+1. `muxrun up group`: Create session `muxrun-group` (if it doesn't exist)
+2. Create a window for each app and execute its command
+3. `muxrun down group`: Close all windows and terminate the session
+4. `muxrun down group app`: Close only that window. If it's the last window, the session is also terminated
+
+---
+
+## Watch Feature Details
+
+### Monitored Targets
+
+- All files under the application's working directory
+- Hidden files and directories are excluded (`.git`, `node_modules`, etc.)
+- Files matching `exclude` regex patterns are excluded
+
+### Exclude Patterns
+
+- Specified as regular expressions (Go `regexp` package syntax)
+- Multiple patterns can be specified as an array
+- Matched against relative file paths (relative to the working directory)
+- Files matching any pattern are excluded from monitoring
 
 ```toml
 watch = { enabled = true, exclude = [
-  "_test\\.go$",      # テストファイルを除外
-  "mock_.*\\.go$",    # モックファイルを除外
-  "testdata/",        # testdata ディレクトリ以下を除外
-  "\\.tmp$",          # .tmp ファイルを除外
+  "_test\\.go$",      # Exclude test files
+  "mock_.*\\.go$",    # Exclude mock files
+  "testdata/",        # Exclude testdata directory
+  "\\.tmp$",          # Exclude .tmp files
 ] }
 ```
 
-### 再起動の流れ
+### Restart Flow
 
-1. ファイル変更を検知
-2. デバウンス処理（連続した変更を1回にまとめる）
-3. 現在のプロセスに SIGTERM を送信
-4. 一定時間後に応答がなければ SIGKILL
-5. コマンドを再実行
-
----
-
-## エラーハンドリング
-
-| 状況 | 挙動 |
-|------|------|
-| config ファイルが存在しない | エラー終了 |
-| config の構文エラー | エラー終了、行番号を表示 |
-| 指定されたグループが存在しない | エラー終了 |
-| 指定されたアプリが存在しない | エラー終了 |
-| 存在しないグループを指定 | エラー終了 |
-| 起動中のアプリに `up` を実行 | エラー終了 |
-| 停止中のアプリに `down` を実行 | 正常終了（何もしない） |
-| fzf がキャンセルされた | エラー終了 |
-| fzf が利用不可 | エラー終了 |
-| tmux が利用不可 | エラー終了 |
+1. File change detected
+2. Debounce processing (coalesce consecutive changes into one)
+3. Send SIGTERM to the current process
+4. If no response after a timeout, send SIGKILL
+5. Re-execute the command
 
 ---
 
-## 制約事項
+## Error Handling
 
-- グループは1つ以上必須
-- 各グループにはアプリケーションが1つ以上必須
-- グループ名・アプリ名は英数字とハイフン、アンダースコアのみ使用可能
-- 同一グループ内でアプリ名の重複は不可
-- グループ名の重複は不可
+| Situation | Behavior |
+|-----------|----------|
+| Config file does not exist | Exit with error |
+| Config syntax error | Exit with error, display line number |
+| Specified group does not exist | Exit with error |
+| Specified app does not exist | Exit with error |
+| `up` on a running app | Exit with error |
+| `down` on a stopped app | Exit successfully (no-op) |
+| fzf cancelled | Exit with error |
+| fzf not available | Exit with error |
+| tmux not available | Exit with error |
+
+---
+
+## Constraints
+
+- At least one group is required
+- Each group must have at least one application
+- Group and app names may only contain alphanumeric characters, hyphens, and underscores
+- Duplicate app names within the same group are not allowed
+- Duplicate group names are not allowed
