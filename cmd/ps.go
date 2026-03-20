@@ -42,6 +42,7 @@ func newPsCommand() *cli.Command {
 					App:    s.App,
 					Status: string(s.Status),
 					PID:    pid,
+					Dir:    s.Dir,
 				})
 			}
 

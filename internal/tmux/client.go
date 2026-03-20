@@ -33,6 +33,7 @@ type Session struct {
 type Window struct {
 	Name string
 	PID  int
+	Dir  string
 }
 
 type client struct {
@@ -109,7 +110,7 @@ func (c *client) KillWindow(session, window string) error {
 }
 
 func (c *client) ListWindows(session string) ([]Window, error) {
-	out, err := c.run("list-windows", "-t", session, "-F", "#{window_name} #{pane_pid}")
+	out, err := c.run("list-windows", "-t", session, "-F", "#{window_name} #{pane_pid} #{pane_current_path}")
 	if err != nil {
 		return nil, err
 	}
@@ -118,12 +119,16 @@ func (c *client) ListWindows(session string) ([]Window, error) {
 	}
 	var windows []Window
 	for _, line := range strings.Split(out, "\n") {
-		parts := strings.SplitN(line, " ", 2)
-		if len(parts) != 2 {
+		parts := strings.SplitN(line, " ", 3)
+		if len(parts) < 2 {
 			continue
 		}
 		pid, _ := strconv.Atoi(parts[1])
-		windows = append(windows, Window{Name: parts[0], PID: pid})
+		dir := ""
+		if len(parts) == 3 {
+			dir = parts[2]
+		}
+		windows = append(windows, Window{Name: parts[0], PID: pid, Dir: dir})
 	}
 	return windows, nil
 }

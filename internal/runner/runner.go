@@ -33,6 +33,7 @@ type AppStatus struct {
 	App    string
 	Status Status
 	PID    int
+	Dir    string
 }
 
 type Status string
@@ -198,6 +199,7 @@ func (r *Runner) Status() ([]AppStatus, error) {
 					if w.Name == app.Name {
 						s.Status = StatusRunning
 						s.PID = w.PID
+						s.Dir = w.Dir
 						break
 					}
 				}
