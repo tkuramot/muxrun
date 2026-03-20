@@ -130,16 +130,6 @@ func spawnDaemons(cfg *config.Config, configPath, groupName string) error {
 	return nil
 }
 
-func completeGroupNames(c *cli.Context) {
-	cfg, err := loadConfig()
-	if err != nil {
-		return
-	}
-	for _, g := range cfg.Groups {
-		fmt.Println(g.Name)
-	}
-}
-
 func loadConfig() (*config.Config, error) {
 	cfg, _, err := loadConfigWithPath()
 	return cfg, err

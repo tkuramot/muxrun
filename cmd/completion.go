@@ -13,6 +13,9 @@ func newCompletionCommand() *cli.Command {
 		ArgsUsage: "<bash|zsh|fish>",
 		Action: func(c *cli.Context) error {
 			shell := c.Args().First()
+			if shell == "" {
+				return fmt.Errorf("shell argument required, supported: bash, zsh, fish")
+			}
 			switch shell {
 			case "bash":
 				fmt.Print(bashCompletionScript)
@@ -25,6 +28,16 @@ func newCompletionCommand() *cli.Command {
 			}
 			return nil
 		},
+	}
+}
+
+func completeGroupNames(c *cli.Context) {
+	cfg, err := loadConfig()
+	if err != nil {
+		return
+	}
+	for _, g := range cfg.Groups {
+		fmt.Println(g.Name)
 	}
 }
 
