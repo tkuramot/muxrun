@@ -23,7 +23,6 @@ muxrun
 
 ## Requirements
 
-- Go 1.26+
 - tmux 3.0+
 - fzf (only required for the `--interactive` option)
 
