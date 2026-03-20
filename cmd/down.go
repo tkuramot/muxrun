@@ -21,6 +21,7 @@ func newDownCommand() *cli.Command {
 				Usage:   "Select apps interactively with fzf",
 			},
 		},
+		BashComplete: completeGroupNames,
 		Action: func(c *cli.Context) error {
 			cfg, err := loadConfig()
 			if err != nil {

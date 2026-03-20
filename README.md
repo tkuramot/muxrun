@@ -176,6 +176,23 @@ tmux list-windows -t muxrun-backend
 > [!NOTE]
 > If you manually stop a process inside an attached window, `muxrun ps` will reflect the updated status.
 
+## Shell Completion
+
+muxrun supports tab completion for bash, zsh, and fish. Subcommands, flags, and group names are completed dynamically.
+
+```bash
+# bash
+eval "$(muxrun completion bash)"
+
+# zsh
+eval "$(muxrun completion zsh)"
+
+# fish
+muxrun completion fish | source
+```
+
+To make it persistent, add the appropriate line to your shell's startup file (e.g., `~/.bashrc`, `~/.zshrc`, `~/.config/fish/config.fish`).
+
 ## Development
 
 ```bash

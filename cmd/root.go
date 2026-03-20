@@ -9,14 +9,16 @@ import (
 
 func NewApp() *cli.App {
 	return &cli.App{
-		Name:  "muxrun",
-		Usage: "Manage multiple applications with tmux",
+		Name:                 "muxrun",
+		Usage:                "Manage multiple applications with tmux",
+		EnableBashCompletion: true,
 		Commands: []*cli.Command{
 			newCheckCommand(),
 			newUpCommand(),
 			newDownCommand(),
 			newPsCommand(),
 			newDaemonCommand(),
+			newCompletionCommand(),
 		},
 		ExitErrHandler: func(cCtx *cli.Context, err error) {
 			if err != nil {

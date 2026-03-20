@@ -27,6 +27,7 @@ func newUpCommand() *cli.Command {
 				Usage:   "Select apps interactively with fzf",
 			},
 		},
+		BashComplete: completeGroupNames,
 		Action: func(c *cli.Context) error {
 			cfg, configPath, err := loadConfigWithPath()
 			if err != nil {
@@ -127,6 +128,16 @@ func spawnDaemons(cfg *config.Config, configPath, groupName string) error {
 		fmt.Printf("started file watcher daemon for group %s\n", g.Name)
 	}
 	return nil
+}
+
+func completeGroupNames(c *cli.Context) {
+	cfg, err := loadConfig()
+	if err != nil {
+		return
+	}
+	for _, g := range cfg.Groups {
+		fmt.Println(g.Name)
+	}
 }
 
 func loadConfig() (*config.Config, error) {
