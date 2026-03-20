@@ -165,10 +165,11 @@ tmux list-sessions | grep muxrun-
 tmux list-windows -t muxrun-backend
 ```
 
-### Notes
+> [!WARNING]
+> Use `muxrun down` to stop sessions and windows. Killing sessions directly with `tmux kill-session` may leave file watch daemons running.
 
-- Use `muxrun down` to stop sessions and windows. Killing sessions directly with `tmux kill-session` may leave file watch daemons running.
-- If you manually stop a process inside an attached window, `muxrun ps` will reflect the updated status.
+> [!NOTE]
+> If you manually stop a process inside an attached window, `muxrun ps` will reflect the updated status.
 
 ## Development
 
