@@ -1,0 +1,52 @@
+# muxrun example config
+# All commands use standard Unix utilities (no external dependencies)
+
+[[group]]
+name = "monitors"
+
+  [[group.app]]
+  name = "clock"
+  cmd = "while true; do date '+%Y-%m-%d %H:%M:%S'; sleep 1; done"
+  dir = "/tmp"
+
+  [[group.app]]
+  name = "disk-usage"
+  cmd = "while true; do df -h / | tail -1; sleep 5; done"
+  dir = "/tmp"
+
+  [[group.app]]
+  name = "uptime"
+  cmd = "while true; do uptime; sleep 10; done"
+  dir = "/tmp"
+
+[[group]]
+name = "logging"
+
+  [[group.app]]
+  name = "access-log"
+  cmd = "while true; do echo \"$(date '+%H:%M:%S') GET /api/health 200 $(shuf -i 10-500 -n 1 2>/dev/null || echo 42)ms\"; sleep 2; done"
+  dir = "/tmp"
+
+  [[group.app]]
+  name = "error-log"
+  cmd = "while true; do echo \"$(date '+%H:%M:%S') [ERROR] connection timeout\" >&2; sleep 7; done"
+  dir = "/tmp"
+
+[[group]]
+name = "workers"
+
+  [[group.app]]
+  name = "counter"
+  cmd = "i=0; while true; do i=$((i+1)); echo \"processed job #$i\"; sleep 3; done"
+  dir = "/tmp"
+
+  [[group.app]]
+  name = "heartbeat"
+  cmd = "while true; do echo \"ping $(hostname)\"; sleep 5; done"
+  dir = "/tmp"
+
+  [[group.app]]
+  name = "pwd-printer"
+  cmd = "echo \"working directory: $(pwd)\"; while true; do ls -1 | head -5; sleep 15; done"
+  dir = "/tmp"
+  watch = { enabled = true, exclude = [".*\\.swp$"] }
