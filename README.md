@@ -15,11 +15,11 @@ go install github.com/tkuramot/muxrun@latest
 ```toml
 [[group]]
 name = "myapp"
+dir = "~/projects/myapp"
 
   [[group.app]]
   name = "server"
   cmd = "go run main.go"
-  dir = "~/projects/myapp"
 ```
 
 3. Run:
@@ -55,11 +55,11 @@ muxrun
 ```toml
 [[group]]
 name = "backend"
+dir = "~/projects/myapp"
 
   [[group.app]]
   name = "api"
   cmd = "go run main.go"
-  dir = "~/projects/myapp/cmd/api"
 ```
 
 ### Full example with file watching
@@ -67,25 +67,24 @@ name = "backend"
 ```toml
 [[group]]
 name = "backend"
+dir = "~/projects/myapp"
 
   [[group.app]]
   name = "api"
   cmd = "go run main.go"
-  dir = "~/projects/myapp/cmd/api"
   watch = { enabled = true, exclude = ["_test\\.go$"] }
 
   [[group.app]]
   name = "worker"
   cmd = "go run worker.go"
-  dir = "~/projects/myapp/cmd/worker"
 
 [[group]]
 name = "frontend"
+dir = "~/projects/frontend"
 
   [[group.app]]
   name = "dev"
   cmd = "npm run dev"
-  dir = "~/projects/frontend"
 ```
 
 ### Fields
@@ -93,9 +92,9 @@ name = "frontend"
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` (under `[[group]]`) | string | Yes | Group name (tmux session name) |
+| `dir` (under `[[group]]`) | string | Yes | Working directory for all apps in the group |
 | `name` (under `[[group.app]]`) | string | Yes | App name (tmux window name) |
 | `cmd` | string | Yes | Command to execute |
-| `dir` | string | Yes | Working directory |
 | `watch.enabled` | bool | No | Enable file watching (default: `false`) |
 | `watch.exclude` | string[] | No | Regex patterns to exclude from watching |
 

@@ -84,11 +84,11 @@ func TestValidate_InvalidExcludePattern(t *testing.T) {
 		Groups: []Group{
 			{
 				Name: "test",
+				Dir:  "/tmp",
 				Apps: []App{
 					{
 						Name:  "app",
 						Cmd:   "echo",
-						Dir:   "/tmp",
 						Watch: WatchConfig{Enabled: true, Exclude: []string{"[invalid"}},
 					},
 				},

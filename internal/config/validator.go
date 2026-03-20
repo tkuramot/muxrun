@@ -25,6 +25,10 @@ func Validate(cfg *Config) error {
 		}
 		groupNames[g.Name] = true
 
+		if g.Dir == "" {
+			return fmt.Errorf("%w: dir is required for group %q", ErrConfigValidation, g.Name)
+		}
+
 		if len(g.Apps) == 0 {
 			return fmt.Errorf("%w: group %q must have at least one app", ErrConfigValidation, g.Name)
 		}
@@ -44,9 +48,6 @@ func Validate(cfg *Config) error {
 
 			if a.Cmd == "" {
 				return fmt.Errorf("%w: cmd is required for app %q in group %q", ErrConfigValidation, a.Name, g.Name)
-			}
-			if a.Dir == "" {
-				return fmt.Errorf("%w: dir is required for app %q in group %q", ErrConfigValidation, a.Name, g.Name)
 			}
 
 			for _, pattern := range a.Watch.Exclude {

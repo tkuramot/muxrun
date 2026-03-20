@@ -91,7 +91,7 @@ func Run(configPath, groupName string) error {
 			continue
 		}
 
-		w, err := watcher.New(app.Dir, app.Watch.Exclude)
+		w, err := watcher.New(group.Dir, app.Watch.Exclude)
 		if err != nil {
 			log.Printf("warning: failed to start watcher for %s/%s: %v", groupName, app.Name, err)
 			continue
@@ -118,7 +118,7 @@ func Run(configPath, groupName string) error {
 			}
 		}()
 
-		log.Printf("watching %s/%s (dir: %s)", groupName, appName, app.Dir)
+		log.Printf("watching %s/%s (dir: %s)", groupName, appName, group.Dir)
 	}
 
 	if len(watchers) == 0 {

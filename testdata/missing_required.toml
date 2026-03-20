@@ -1,6 +1,6 @@
 [[group]]
 name = "backend"
+dir = "/tmp/test"
 
   [[group.app]]
   name = "api"
-  dir = "/tmp/test"

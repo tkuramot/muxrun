@@ -1,15 +1,15 @@
 [[group]]
 name = "backend"
+dir = "/tmp/test"
 
   [[group.app]]
   name = "api"
   cmd = "echo hello"
-  dir = "/tmp/test"
 
 [[group]]
 name = "backend"
+dir = "/tmp/test"
 
   [[group.app]]
   name = "worker"
   cmd = "echo world"
-  dir = "/tmp/test"

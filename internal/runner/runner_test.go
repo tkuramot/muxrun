@@ -14,15 +14,17 @@ func testConfig() *config.Config {
 		Groups: []config.Group{
 			{
 				Name: "backend",
+				Dir:  "/tmp",
 				Apps: []config.App{
-					{Name: "api", Cmd: "echo api", Dir: "/tmp"},
-					{Name: "worker", Cmd: "echo worker", Dir: "/tmp"},
+					{Name: "api", Cmd: "echo api"},
+					{Name: "worker", Cmd: "echo worker"},
 				},
 			},
 			{
 				Name: "frontend",
+				Dir:  "/tmp",
 				Apps: []config.App{
-					{Name: "dev", Cmd: "echo dev", Dir: "/tmp"},
+					{Name: "dev", Cmd: "echo dev"},
 				},
 			},
 		},

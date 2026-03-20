@@ -1,22 +1,21 @@
 [[group]]
 name = "backend"
+dir = "/tmp/muxrun-test/backend"
 
   [[group.app]]
   name = "api"
   cmd = "go run main.go"
-  dir = "/tmp/muxrun-test/api"
   watch = { enabled = true, exclude = ["_test\\.go$", "mock_.*\\.go$"] }
 
   [[group.app]]
   name = "worker"
   cmd = "go run worker.go"
-  dir = "/tmp/muxrun-test/worker"
   watch = { enabled = true, exclude = ["testdata/"] }
 
 [[group]]
 name = "frontend"
+dir = "/tmp/muxrun-test/frontend"
 
   [[group.app]]
   name = "dev"
   cmd = "npm run dev"
-  dir = "/tmp/muxrun-test/frontend"

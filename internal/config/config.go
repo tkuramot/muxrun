@@ -15,13 +15,13 @@ type Config struct {
 
 type Group struct {
 	Name string
+	Dir  string
 	Apps []App
 }
 
 type App struct {
 	Name  string
 	Cmd   string
-	Dir   string
 	Watch WatchConfig
 }
 
@@ -37,6 +37,7 @@ type rawConfig struct {
 
 type rawGroup struct {
 	Name string   `toml:"name"`
+	Dir  string   `toml:"dir"`
 	Apps []rawApp `toml:"app"`
 }
 
@@ -48,7 +49,6 @@ type rawWatchConfig struct {
 type rawApp struct {
 	Name  string         `toml:"name"`
 	Cmd   string         `toml:"cmd"`
-	Dir   string         `toml:"dir"`
 	Watch rawWatchConfig `toml:"watch"`
 }
 
@@ -94,16 +94,15 @@ func Load(path string) (*Config, error) {
 func convertRawConfig(raw *rawConfig) (*Config, error) {
 	cfg := &Config{}
 	for _, rg := range raw.Groups {
-		g := Group{Name: rg.Name}
+		dir, err := expandPath(rg.Dir)
+		if err != nil {
+			return nil, err
+		}
+		g := Group{Name: rg.Name, Dir: dir}
 		for _, ra := range rg.Apps {
-			dir, err := expandPath(ra.Dir)
-			if err != nil {
-				return nil, err
-			}
 			g.Apps = append(g.Apps, App{
 				Name: ra.Name,
 				Cmd:  ra.Cmd,
-				Dir:  dir,
 				Watch: WatchConfig{
 					Enabled: ra.Watch.Enabled,
 					Exclude: ra.Watch.Exclude,

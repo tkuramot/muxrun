@@ -76,11 +76,12 @@ func (r *Runner) Up(ctx context.Context, opts UpOptions) error {
 			return fmt.Errorf("creating session for group %q: %w", g.Name, err)
 		}
 
+		dir := g.Dir
+		if opts.DirOverride != "" {
+			dir = opts.DirOverride
+		}
+
 		for _, app := range apps {
-			dir := app.Dir
-			if opts.DirOverride != "" {
-				dir = opts.DirOverride
-			}
 
 			// Check if already running
 			hasWin, err := tmux.HasWindow(r.tmux, session, app.Name)
