@@ -5,11 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/tkuramot/muxrun/internal/config"
 	"github.com/tkuramot/muxrun/internal/tmux"
-	"github.com/tkuramot/muxrun/internal/watcher"
 )
 
 var (
@@ -44,17 +42,8 @@ const (
 )
 
 type Runner struct {
-	cfg      *config.Config
-	tmux     tmux.Client
-	watchers []*appWatcher
-}
-
-type appWatcher struct {
-	watcher   *watcher.Watcher
-	debouncer *watcher.Debouncer
-	session   string
-	window    string
-	cmd       string
+	cfg  *config.Config
+	tmux tmux.Client
 }
 
 func New(cfg *config.Config, tmuxClient tmux.Client) *Runner {
@@ -108,12 +97,6 @@ func (r *Runner) Up(ctx context.Context, opts UpOptions) error {
 			}
 
 			fmt.Printf("started %s/%s\n", g.Name, app.Name)
-
-			if app.Watch.Enabled {
-				if err := r.startWatcher(session, app.Name, app.Cmd, dir, app.Watch.Exclude); err != nil {
-					fmt.Printf("warning: failed to start watcher for %s/%s: %v\n", g.Name, app.Name, err)
-				}
-			}
 		}
 
 		// Clean up the default window created with the session
@@ -143,8 +126,6 @@ func (r *Runner) Down(ctx context.Context, opts DownOptions) error {
 				return fmt.Errorf("%w: %s in group %s", ErrAppNotFound, opts.AppName, g.Name)
 			}
 
-			r.stopWatcher(session, app.Name)
-
 			// Kill specific window
 			hasWin, _ := tmux.HasWindow(r.tmux, session, app.Name)
 			if !hasWin {
@@ -162,9 +143,6 @@ func (r *Runner) Down(ctx context.Context, opts DownOptions) error {
 				r.tmux.KillSession(session)
 			}
 		} else {
-			// Stop all watchers for this session
-			r.stopSessionWatchers(session)
-
 			if err := r.tmux.KillSession(session); err != nil {
 				return fmt.Errorf("killing session for group %q: %w", g.Name, err)
 			}
@@ -219,66 +197,6 @@ func (r *Runner) PIDString(pid int) string {
 	return strconv.Itoa(pid)
 }
 
-func (r *Runner) startWatcher(session, window, cmd, dir string, excludePatterns []string) error {
-	w, err := watcher.New(dir, excludePatterns)
-	if err != nil {
-		return err
-	}
-
-	aw := &appWatcher{
-		watcher: w,
-		session: session,
-		window:  window,
-		cmd:     cmd,
-	}
-
-	aw.debouncer = watcher.NewDebouncer(500*time.Millisecond, func() {
-		r.restartApp(session, window, cmd)
-	})
-
-	r.watchers = append(r.watchers, aw)
-
-	go func() {
-		for range w.Events() {
-			aw.debouncer.Trigger()
-		}
-	}()
-
-	return nil
-}
-
-func (r *Runner) restartApp(session, window, cmd string) {
-	// Send Ctrl+C to stop current process, then re-run command
-	r.tmux.SendKeys(session, window, "C-c")
-	time.Sleep(100 * time.Millisecond)
-	r.tmux.SendKeys(session, window, cmd)
-	fmt.Printf("restarted %s:%s\n", tmux.GroupName(session), window)
-}
-
-func (r *Runner) stopWatcher(session, window string) {
-	for i, aw := range r.watchers {
-		if aw.session == session && aw.window == window {
-			aw.debouncer.Stop()
-			aw.watcher.Stop()
-			r.watchers = append(r.watchers[:i], r.watchers[i+1:]...)
-			return
-		}
-	}
-}
-
-func (r *Runner) stopSessionWatchers(session string) {
-	remaining := r.watchers[:0]
-	for _, aw := range r.watchers {
-		if aw.session == session {
-			aw.debouncer.Stop()
-			aw.watcher.Stop()
-		} else {
-			remaining = append(remaining, aw)
-		}
-	}
-	r.watchers = remaining
-}
-
 func (r *Runner) cleanupDefaultWindow(session string) {
 	windows, err := r.tmux.ListWindows(session)
 	if err != nil || len(windows) <= 1 {
@@ -294,10 +212,3 @@ func (r *Runner) cleanupDefaultWindow(session string) {
 	}
 }
 
-func (r *Runner) StopAllWatchers() {
-	for _, aw := range r.watchers {
-		aw.debouncer.Stop()
-		aw.watcher.Stop()
-	}
-	r.watchers = nil
-}

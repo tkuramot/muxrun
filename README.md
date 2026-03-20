@@ -75,7 +75,9 @@ watch = { enabled = true }
 watch = { enabled = true, exclude = ["_test\\.go$", "testdata/"] }
 ```
 
-ファイル変更を検知するとアプリケーションを自動再起動します。
+ファイル変更を検知するとアプリケーションを自動再起動します。watch が有効なグループでは `muxrun up` 時にバックグラウンド daemon が自動起動し、`muxrun down` 時に自動停止します。
+
+daemon のログは `$TMPDIR/muxrun/daemon-<グループ名>.log`、PID ファイルは `$TMPDIR/muxrun/daemon-<グループ名>.pid` に保存されます。
 
 ## 使い方
 
@@ -165,7 +167,7 @@ tmux list-windows -t muxrun-backend
 
 ### 注意事項
 
-- セッションやウィンドウの停止には `muxrun down` を使用してください。`tmux kill-session` で直接終了すると muxrun の状態管理と不整合が生じる場合があります。
+- セッションやウィンドウの停止には `muxrun down` を使用してください。`tmux kill-session` で直接終了するとファイル監視 daemon が残り続ける場合があります。
 - アタッチ中にウィンドウ内でプロセスを手動停止した場合も、`muxrun ps` のステータスに反映されます。
 
 ## 開発

@@ -16,6 +16,7 @@ func NewApp() *cli.App {
 			newUpCommand(),
 			newDownCommand(),
 			newPsCommand(),
+			newDaemonCommand(),
 		},
 		ExitErrHandler: func(cCtx *cli.Context, err error) {
 			if err != nil {

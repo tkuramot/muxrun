@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/tkuramot/muxrun/internal/config"
+	"github.com/tkuramot/muxrun/internal/daemon"
 	"github.com/tkuramot/muxrun/internal/runner"
 	"github.com/tkuramot/muxrun/internal/selector"
 	"github.com/tkuramot/muxrun/internal/tmux"
@@ -39,12 +40,20 @@ func newDownCommand() *cli.Command {
 
 			args := c.Args().Slice()
 			if len(args) == 0 {
-				return r.Down(c.Context, runner.DownOptions{})
+				if err := r.Down(c.Context, runner.DownOptions{}); err != nil {
+					return err
+				}
+				// Stop all daemons
+				for _, g := range cfg.Groups {
+					daemon.StopDaemon(g.Name)
+				}
+				return nil
 			}
 			for _, group := range args {
 				if err := r.Down(c.Context, runner.DownOptions{GroupName: group}); err != nil {
 					return err
 				}
+				daemon.StopDaemon(group)
 			}
 			return nil
 		},
@@ -64,12 +73,27 @@ func downInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner) error
 		return err
 	}
 
+	// Track which groups had all apps stopped
+	groupApps := make(map[string]int)
+	for _, g := range cfg.Groups {
+		groupApps[g.Name] = len(g.Apps)
+	}
+	stoppedPerGroup := make(map[string]int)
+
 	for _, s := range selected {
 		if err := r.Down(c.Context, runner.DownOptions{
 			GroupName: s.Group,
 			AppName:   s.App,
 		}); err != nil {
 			return err
+		}
+		stoppedPerGroup[s.Group]++
+	}
+
+	// Stop daemon for groups where all apps were stopped
+	for group, stopped := range stoppedPerGroup {
+		if stopped >= groupApps[group] {
+			daemon.StopDaemon(group)
 		}
 	}
 	return nil

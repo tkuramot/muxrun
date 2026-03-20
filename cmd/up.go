@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/tkuramot/muxrun/internal/config"
+	"github.com/tkuramot/muxrun/internal/daemon"
 	"github.com/tkuramot/muxrun/internal/runner"
 	"github.com/tkuramot/muxrun/internal/selector"
 	"github.com/tkuramot/muxrun/internal/tmux"
@@ -25,7 +28,7 @@ func newUpCommand() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			cfg, err := loadConfig()
+			cfg, configPath, err := loadConfigWithPath()
 			if err != nil {
 				return err
 			}
@@ -38,14 +41,17 @@ func newUpCommand() *cli.Command {
 			r := runner.New(cfg, tmuxClient)
 
 			if c.Bool("interactive") {
-				return upInteractive(c, cfg, r)
+				return upInteractive(c, cfg, r, configPath)
 			}
 
 			args := c.Args().Slice()
 			if len(args) == 0 {
-				return r.Up(c.Context, runner.UpOptions{
+				if err := r.Up(c.Context, runner.UpOptions{
 					DirOverride: c.String("dir"),
-				})
+				}); err != nil {
+					return err
+				}
+				return spawnDaemons(cfg, configPath, "")
 			}
 			for _, group := range args {
 				if err := r.Up(c.Context, runner.UpOptions{
@@ -54,13 +60,16 @@ func newUpCommand() *cli.Command {
 				}); err != nil {
 					return err
 				}
+				if err := spawnDaemons(cfg, configPath, group); err != nil {
+					return err
+				}
 			}
 			return nil
 		},
 	}
 }
 
-func upInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner) error {
+func upInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner, configPath string) error {
 	var options []selector.AppOption
 	for _, g := range cfg.Groups {
 		for _, a := range g.Apps {
@@ -73,6 +82,7 @@ func upInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner) error {
 		return err
 	}
 
+	groups := make(map[string]bool)
 	for _, s := range selected {
 		if err := r.Up(c.Context, runner.UpOptions{
 			GroupName:   s.Group,
@@ -81,21 +91,60 @@ func upInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner) error {
 		}); err != nil {
 			return err
 		}
+		groups[s.Group] = true
+	}
+
+	for group := range groups {
+		if err := spawnDaemons(cfg, configPath, group); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func spawnDaemons(cfg *config.Config, configPath, groupName string) error {
+	groups := cfg.FindGroups(groupName)
+	for _, g := range groups {
+		hasWatch := false
+		for _, app := range g.Apps {
+			if app.Watch.Enabled {
+				hasWatch = true
+				break
+			}
+		}
+		if !hasWatch {
+			continue
+		}
+
+		// Stop existing daemon and respawn
+		if daemon.IsRunning(g.Name) {
+			daemon.StopDaemon(g.Name)
+		}
+		if err := daemon.Spawn(configPath, g.Name); err != nil {
+			fmt.Printf("warning: failed to start daemon for group %s: %v\n", g.Name, err)
+			continue
+		}
+		fmt.Printf("started file watcher daemon for group %s\n", g.Name)
 	}
 	return nil
 }
 
 func loadConfig() (*config.Config, error) {
+	cfg, _, err := loadConfigWithPath()
+	return cfg, err
+}
+
+func loadConfigWithPath() (*config.Config, string, error) {
 	path, err := config.DefaultConfigPath()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	cfg, err := config.Load(path)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if err := config.Validate(cfg); err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	return cfg, nil
+	return cfg, path, nil
 }
