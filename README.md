@@ -1,40 +1,68 @@
 # muxrun
 
-A CLI tool that manages and launches multiple applications in groups using tmux.
+A CLI tool that launches and manages multiple applications in groups using tmux.
 
-## Overview
+## Quick Start
 
-muxrun manages multiple processes in a two-level hierarchy of groups and applications. Groups correspond to tmux sessions, and applications correspond to tmux windows. Commands defined in a config file can be started and stopped in bulk.
-
-```
-muxrun
-├── Group A (= tmux session)
-│   ├── App 1 (= tmux window)
-│   └── App 2 (= tmux window)
-└── Group B (= tmux session)
-    └── App 3 (= tmux window)
-```
-
-## Use Cases
-
-- **Microservice development** — Start multiple processes (API server, worker, frontend, etc.) at once with a single `muxrun up` instead of opening multiple terminals.
-- **Auto-restart on file changes** — Enable `watch` to automatically restart apps when source files change, useful for languages without built-in hot reload (e.g., Go).
-- **Selective group control** — Stop or restart only a subset of processes by group (e.g., `muxrun down backend`) without affecting the rest.
-
-## Requirements
-
-- tmux 3.0+
-- fzf (only required for the `--interactive` option)
-
-## Installation
+1. Install muxrun:
 
 ```bash
 go install github.com/tkuramot/muxrun@latest
 ```
 
+2. Create `~/.config/muxrun/config.toml`:
+
+```toml
+[[group]]
+name = "myapp"
+
+  [[group.app]]
+  name = "server"
+  cmd = "go run main.go"
+  dir = "~/projects/myapp"
+```
+
+3. Run:
+
+```bash
+muxrun up
+```
+
+This starts the `server` app inside a tmux session named `muxrun-myapp`. Use `muxrun down` to stop it.
+
+## Overview
+
+muxrun organizes applications into **groups**. Each group becomes a tmux session, and each app becomes a window within that session.
+
+```
+muxrun
+├── Group A (tmux session)
+│   ├── App 1 (tmux window)
+│   └── App 2 (tmux window)
+└── Group B (tmux session)
+    └── App 3 (tmux window)
+```
+
+## Requirements
+
+- tmux 3.0+
+- fzf (only for the `--interactive` option)
+
 ## Configuration
 
-Create a config file at `~/.config/muxrun/config.toml`.
+### Minimal example
+
+```toml
+[[group]]
+name = "backend"
+
+  [[group.app]]
+  name = "api"
+  cmd = "go run main.go"
+  dir = "~/projects/myapp/cmd/api"
+```
+
+### Full example with file watching
 
 ```toml
 [[group]]
@@ -64,70 +92,40 @@ name = "frontend"
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `group.name` | string | Yes | Group name (used as tmux session name) |
-| `group.app.name` | string | Yes | App name (used as tmux window name) |
-| `group.app.cmd` | string | Yes | Command to execute |
-| `group.app.dir` | string | Yes | Working directory |
-| `group.app.watch` | object | No | File watch config (default: disabled) |
+| `name` (under `[[group]]`) | string | Yes | Group name (tmux session name) |
+| `name` (under `[[group.app]]`) | string | Yes | App name (tmux window name) |
+| `cmd` | string | Yes | Command to execute |
+| `dir` | string | Yes | Working directory |
+| `watch.enabled` | bool | No | Enable file watching (default: `false`) |
+| `watch.exclude` | string[] | No | Regex patterns to exclude from watching |
 
-### Watch Configuration
+When `watch` is enabled, muxrun starts a background daemon that restarts the app on file changes. The daemon starts with `muxrun up` and stops with `muxrun down`.
 
-```toml
-# Enable watching
-watch = { enabled = true }
-
-# Enable watching with exclude patterns (regex)
-watch = { enabled = true, exclude = ["_test\\.go$", "testdata/"] }
-```
-
-When file changes are detected, the application is automatically restarted. For groups with watch enabled, a background daemon is automatically started on `muxrun up` and stopped on `muxrun down`.
-
-Daemon logs are stored at `$TMPDIR/muxrun/daemon-<group>.log` and PID files at `$TMPDIR/muxrun/daemon-<group>.pid`.
+Daemon logs: `$TMPDIR/muxrun/daemon-<group>.log` / PID files: `$TMPDIR/muxrun/daemon-<group>.pid`
 
 ## Usage
 
-### Validate config file
+### `muxrun up` — Start applications
 
 ```bash
-muxrun check
+muxrun up                           # Start all groups
+muxrun up backend                   # Start a specific group
+muxrun up backend frontend          # Start multiple groups
+muxrun up backend --dir ~/other     # Override working directory
+muxrun up -i                        # Select interactively with fzf
 ```
 
-### Start applications
+### `muxrun down` — Stop applications
+
+`down` accepts the same arguments as `up`.
 
 ```bash
-# Start all groups and apps
-muxrun up
-
-# Start all apps in a specific group
-muxrun up backend
-
-# Start multiple groups
-muxrun up backend frontend
-
-# Override working directory
-muxrun up backend --dir ~/projects/other-app
-
-# Select interactively with fzf
-muxrun up -i
+muxrun down                         # Stop all groups
+muxrun down backend                 # Stop a specific group
+muxrun down -i                      # Select interactively with fzf
 ```
 
-### Stop applications
-
-```bash
-# Stop all groups and apps
-muxrun down
-
-# Stop all apps in a specific group
-muxrun down backend
-
-# Stop multiple groups
-muxrun down backend frontend
-
-# Select interactively with fzf
-muxrun down -i
-```
-
-### Check status
+### `muxrun ps` — Check status
 
 ```bash
 $ muxrun ps
@@ -137,44 +135,52 @@ backend     worker    running   12346
 frontend    dev       stopped   -
 ```
 
-## Working with tmux Sessions
-
-Processes launched by muxrun run inside tmux sessions. Session names follow the format `muxrun-<group>`.
-
-### Attaching to a session
+### `muxrun check` — Validate config file
 
 ```bash
-# Attach to the backend group session
+muxrun check
+```
+
+## Use Cases
+
+- **Microservice development** — Start multiple processes (API server, worker, frontend, etc.) at once with `muxrun up` instead of opening multiple terminals.
+- **Auto-restart on file changes** — Enable `watch` to restart apps when source files change, useful for languages without built-in hot reload (e.g., Go).
+- **Selective group control** — Stop or restart only a subset of processes by group (e.g., `muxrun down backend`) without affecting the rest.
+
+## Working with tmux Sessions
+
+muxrun creates tmux sessions named `muxrun-<group>`. Attach to a session to see app output:
+
+```bash
 tmux attach -t muxrun-backend
 ```
 
-Once attached, you can use standard tmux operations.
+> [!WARNING]
+> Use `muxrun down` to stop sessions. Killing sessions directly with `tmux kill-session` may leave file watch daemons running.
 
-### Basic tmux operations (default prefix key: `Ctrl-b`)
+> [!NOTE]
+> If you manually stop a process inside an attached window, `muxrun ps` reflects the updated status.
+
+<details>
+<summary>Basic tmux operations (prefix: Ctrl-b)</summary>
 
 | Action | Key | Description |
 |--------|-----|-------------|
-| Next window | `Ctrl-b` `n` | Switch to the next app (window) |
-| Previous window | `Ctrl-b` `p` | Switch to the previous app (window) |
+| Next window | `Ctrl-b` `n` | Switch to the next app |
+| Previous window | `Ctrl-b` `p` | Switch to the previous app |
 | Window list | `Ctrl-b` `w` | List all windows and select |
 | Detach | `Ctrl-b` `d` | Detach from session (processes keep running) |
 | Scroll mode | `Ctrl-b` `[` | Scroll through logs (`q` to exit) |
-
-### Listing sessions and windows
 
 ```bash
 # List muxrun-managed sessions
 tmux list-sessions | grep muxrun-
 
-# List windows (apps) in a specific session
+# List windows in a session
 tmux list-windows -t muxrun-backend
 ```
 
-> [!WARNING]
-> Use `muxrun down` to stop sessions and windows. Killing sessions directly with `tmux kill-session` may leave file watch daemons running.
-
-> [!NOTE]
-> If you manually stop a process inside an attached window, `muxrun ps` will reflect the updated status.
+</details>
 
 ## Shell Completion
 
@@ -189,14 +195,9 @@ To make it persistent, add the line to `~/.zshrc`.
 ## Development
 
 ```bash
-# Unit tests
-go test ./...
-
-# Integration tests
-go test -tags=integration ./...
-
-# E2E tests
-go test -tags=e2e ./...
+go test ./...                        # Unit tests
+go test -tags=integration ./...      # Integration tests
+go test -tags=e2e ./...              # E2E tests
 ```
 
 ## License
