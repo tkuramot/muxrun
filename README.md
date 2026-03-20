@@ -15,6 +15,12 @@ muxrun
     └── App 3 (= tmux window)
 ```
 
+## Use Cases
+
+- **Microservice development** — Start multiple processes (API server, worker, frontend, etc.) at once with a single `muxrun up` instead of opening multiple terminals.
+- **Auto-restart on file changes** — Enable `watch` to automatically restart apps when source files change, useful for languages without built-in hot reload (e.g., Go).
+- **Selective group control** — Stop or restart only a subset of processes by group (e.g., `muxrun down backend`) without affecting the rest.
+
 ## Requirements
 
 - Go 1.26+
