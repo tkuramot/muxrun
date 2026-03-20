@@ -49,4 +49,22 @@ name = "workers"
   name = "pwd-printer"
   cmd = "echo \"working directory: $(pwd)\"; while true; do ls -1 | head -5; sleep 15; done"
   dir = "/tmp"
-  watch = { enabled = true, exclude = [".*\\.swp$"] }
+
+# File watch example
+# watch monitors the app's dir for file changes and auto-restarts the process.
+# Setup: mkdir -p /tmp/watch-test
+# Try:   touch /tmp/watch-test/hello.txt to see the apps restart.
+[[group]]
+name = "file-watch"
+
+  [[group.app]]
+  name = "watcher-basic"
+  cmd = "echo \"started at $(date '+%H:%M:%S')\"; while true; do sleep 60; done"
+  dir = "/tmp/watch-test"
+  watch = { enabled = true }
+
+  [[group.app]]
+  name = "watcher-filtered"
+  cmd = "echo \"started at $(date '+%H:%M:%S')\"; while true; do sleep 60; done"
+  dir = "/tmp/watch-test"
+  watch = { enabled = true, exclude = [".*\\.log$", ".*\\.tmp$"] }
