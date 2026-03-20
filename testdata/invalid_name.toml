@@ -1,0 +1,7 @@
+[[group]]
+name = "back end"
+
+  [[group.app]]
+  name = "api"
+  cmd = "echo hello"
+  dir = "/tmp/test"

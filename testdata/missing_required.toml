@@ -1,0 +1,6 @@
+[[group]]
+name = "backend"
+
+  [[group.app]]
+  name = "api"
+  dir = "/tmp/test"
