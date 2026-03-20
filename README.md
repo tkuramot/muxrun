@@ -178,20 +178,13 @@ tmux list-windows -t muxrun-backend
 
 ## Shell Completion
 
-muxrun supports tab completion for bash, zsh, and fish. Subcommands, flags, and group names are completed dynamically.
+muxrun supports tab completion for zsh. Subcommands, flags, and group names are completed dynamically.
 
 ```bash
-# bash
-eval "$(muxrun completion bash)"
-
-# zsh
 eval "$(muxrun completion zsh)"
-
-# fish
-muxrun completion fish | source
 ```
 
-To make it persistent, add the appropriate line to your shell's startup file (e.g., `~/.bashrc`, `~/.zshrc`, `~/.config/fish/config.fish`).
+To make it persistent, add the line to `~/.zshrc`.
 
 ## Development
 
