@@ -129,10 +129,10 @@ muxrun down -i                      # Select interactively with fzf
 
 ```bash
 $ muxrun ps
-GROUP       APP       STATUS    PID
-backend     api       running   12345
-backend     worker    running   12346
-frontend    dev       stopped   -
+GROUP       APP       STATUS    PID      DIR
+backend     api       running   12345    ~/projects/myapp/cmd/api
+backend     worker    running   12346    ~/projects/myapp/cmd/worker
+frontend    dev       stopped   -        ~/projects/frontend
 ```
 
 ### `muxrun check` — Validate config file
