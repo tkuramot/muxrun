@@ -92,13 +92,13 @@ muxrun check
 muxrun up
 
 # 特定グループの全アプリを起動
-muxrun up -g backend
+muxrun up backend
 
-# 特定グループの特定アプリのみ起動
-muxrun up -g backend -a api
+# 複数グループを起動
+muxrun up backend frontend
 
 # ディレクトリを上書き指定
-muxrun up -g backend --dir ~/projects/other-app
+muxrun up backend --dir ~/projects/other-app
 
 # fzf でインタラクティブに選択
 muxrun up -i
@@ -111,10 +111,10 @@ muxrun up -i
 muxrun down
 
 # 特定グループの全アプリを停止
-muxrun down -g backend
+muxrun down backend
 
-# 特定アプリのみ停止
-muxrun down -g backend -a api
+# 複数グループを停止
+muxrun down backend frontend
 
 # fzf でインタラクティブに選択
 muxrun down -i

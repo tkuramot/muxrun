@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/tkuramot/muxrun/internal/config"
 	"github.com/tkuramot/muxrun/internal/runner"
 	"github.com/tkuramot/muxrun/internal/selector"
@@ -14,17 +12,8 @@ func newDownCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "down",
 		Usage: "Stop applications",
+		ArgsUsage: "[group...]",
 		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:    "group",
-				Aliases: []string{"g"},
-				Usage:   "Target group name",
-			},
-			&cli.StringFlag{
-				Name:    "app",
-				Aliases: []string{"a"},
-				Usage:   "Target app name (requires --group)",
-			},
 			&cli.BoolFlag{
 				Name:    "interactive",
 				Aliases: []string{"i"},
@@ -32,10 +21,6 @@ func newDownCommand() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			if c.String("app") != "" && c.String("group") == "" {
-				return fmt.Errorf("--app requires --group")
-			}
-
 			cfg, err := loadConfig()
 			if err != nil {
 				return err
@@ -52,10 +37,16 @@ func newDownCommand() *cli.Command {
 				return downInteractive(c, cfg, r)
 			}
 
-			return r.Down(c.Context, runner.DownOptions{
-				GroupName: c.String("group"),
-				AppName:   c.String("app"),
-			})
+			args := c.Args().Slice()
+			if len(args) == 0 {
+				return r.Down(c.Context, runner.DownOptions{})
+			}
+			for _, group := range args {
+				if err := r.Down(c.Context, runner.DownOptions{GroupName: group}); err != nil {
+					return err
+				}
+			}
+			return nil
 		},
 	}
 }

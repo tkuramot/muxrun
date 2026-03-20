@@ -153,17 +153,15 @@ frontend    dev       stopped   -
 muxrun up
 
 # 特定グループの全アプリを起動
-muxrun up --group backend
-muxrun up -g backend
+muxrun up backend
 
-# 特定グループの特定アプリのみ起動
-muxrun up --group backend --app api
-muxrun up -g backend -a api
+# 複数グループを起動
+muxrun up backend frontend
 
 # CLI でディレクトリを上書き指定
-muxrun up --group backend --dir ~/projects/other-app
+muxrun up backend --dir ~/projects/other-app
 
-# fzf でインタラクティブに選択
+# fzf でインタラクティブにアプリを選択
 muxrun up --interactive
 muxrun up -i
 ```
@@ -172,16 +170,15 @@ muxrun up -i
 
 | オプション | 短縮形 | 説明 |
 |-----------|--------|------|
-| `--group <name>` | `-g` | 対象グループを指定 |
-| `--app <name>` | `-a` | 対象アプリを指定（`--group` 必須） |
 | `--dir <path>` | なし | 実行ディレクトリを明示的に指定（config の dir を上書き） |
-| `--interactive` | `-i` | fzf でグループ・アプリを対話的に選択 |
+| `--interactive` | `-i` | fzf でアプリを対話的に選択 |
+
+**位置引数:** `[group...]` — 対象グループ名を指定（省略時は全グループ）
 
 **挙動:**
-- `--group` も `--app` も未指定: 全グループ・全アプリを起動
-- `--group` のみ指定: そのグループ内の全アプリを起動
-- `--group` と `--app` を指定: 該当アプリのみ起動
-- `--app` のみ指定（`--group` なし）: エラー
+- 引数なし: 全グループ・全アプリを起動
+- グループ名を指定: そのグループ内の全アプリを起動
+- 複数グループ名を指定: 各グループ内の全アプリを起動
 - `--dir` 指定: config の dir を上書き
 - `--interactive` 指定: fzf で対象を選択（複数選択可）
 - 既に起動中のアプリを指定: **エラー**
@@ -195,14 +192,12 @@ muxrun up -i
 muxrun down
 
 # 特定グループの全アプリを停止
-muxrun down --group backend
-muxrun down -g backend
+muxrun down backend
 
-# 特定グループの特定アプリのみ停止
-muxrun down --group backend --app api
-muxrun down -g backend -a api
+# 複数グループを停止
+muxrun down backend frontend
 
-# fzf でインタラクティブに選択
+# fzf でインタラクティブにアプリを選択
 muxrun down --interactive
 muxrun down -i
 ```
@@ -211,15 +206,14 @@ muxrun down -i
 
 | オプション | 短縮形 | 説明 |
 |-----------|--------|------|
-| `--group <name>` | `-g` | 対象グループを指定 |
-| `--app <name>` | `-a` | 対象アプリを指定（`--group` 必須） |
-| `--interactive` | `-i` | fzf でグループ・アプリを対話的に選択 |
+| `--interactive` | `-i` | fzf でアプリを対話的に選択 |
+
+**位置引数:** `[group...]` — 対象グループ名を指定（省略時は全グループ）
 
 **挙動:**
-- `--group` も `--app` も未指定: 全グループ・全アプリを停止、全セッション終了
-- `--group` のみ指定: そのグループ内の全アプリを停止、セッション終了
-- `--group` と `--app` を指定: 該当アプリのみ停止。最後のウィンドウならセッションも終了
-- `--app` のみ指定（`--group` なし）: エラー
+- 引数なし: 全グループ・全アプリを停止、全セッション終了
+- グループ名を指定: そのグループ内の全アプリを停止、セッション終了
+- 複数グループ名を指定: 各グループの全アプリを停止、セッション終了
 - `--interactive` 指定: fzf で対象を選択（複数選択可）
 - 停止済みのアプリを指定: 無視（正常終了）
 
@@ -283,7 +277,7 @@ watch = { enabled = true, exclude = [
 | config の構文エラー | エラー終了、行番号を表示 |
 | 指定されたグループが存在しない | エラー終了 |
 | 指定されたアプリが存在しない | エラー終了 |
-| `--app` のみ指定（`--group` なし） | エラー終了 |
+| 存在しないグループを指定 | エラー終了 |
 | 起動中のアプリに `up` を実行 | エラー終了 |
 | 停止中のアプリに `down` を実行 | 正常終了（何もしない） |
 | fzf がキャンセルされた | エラー終了 |

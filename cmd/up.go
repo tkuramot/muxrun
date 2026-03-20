@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/tkuramot/muxrun/internal/config"
 	"github.com/tkuramot/muxrun/internal/runner"
 	"github.com/tkuramot/muxrun/internal/selector"
@@ -14,17 +12,8 @@ func newUpCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "up",
 		Usage: "Start applications",
+		ArgsUsage: "[group...]",
 		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:    "group",
-				Aliases: []string{"g"},
-				Usage:   "Target group name",
-			},
-			&cli.StringFlag{
-				Name:    "app",
-				Aliases: []string{"a"},
-				Usage:   "Target app name (requires --group)",
-			},
 			&cli.StringFlag{
 				Name:  "dir",
 				Usage: "Override execution directory",
@@ -36,10 +25,6 @@ func newUpCommand() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			if c.String("app") != "" && c.String("group") == "" {
-				return fmt.Errorf("--app requires --group")
-			}
-
 			cfg, err := loadConfig()
 			if err != nil {
 				return err
@@ -56,11 +41,21 @@ func newUpCommand() *cli.Command {
 				return upInteractive(c, cfg, r)
 			}
 
-			return r.Up(c.Context, runner.UpOptions{
-				GroupName:   c.String("group"),
-				AppName:     c.String("app"),
-				DirOverride: c.String("dir"),
-			})
+			args := c.Args().Slice()
+			if len(args) == 0 {
+				return r.Up(c.Context, runner.UpOptions{
+					DirOverride: c.String("dir"),
+				})
+			}
+			for _, group := range args {
+				if err := r.Up(c.Context, runner.UpOptions{
+					GroupName:   group,
+					DirOverride: c.String("dir"),
+				}); err != nil {
+					return err
+				}
+			}
+			return nil
 		},
 	}
 }
