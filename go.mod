@@ -1,6 +1,6 @@
 module github.com/tkuramot/muxrun
 
-go 1.26.1
+go 1.25.1
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect

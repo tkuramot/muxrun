@@ -11,6 +11,34 @@
       forAllSystems = nixpkgs.lib.genAttrs systems;
     in
     {
+      packages = forAllSystems (system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        {
+          default = pkgs.buildGoModule {
+            pname = "muxrun";
+            version = "0.3.0";
+            src = ./.;
+            vendorHash = "sha256-LQuko0KeIZoIb1rmd+GyNUIUTB1yTP/BGMd7kgu39/0=";
+
+            nativeBuildInputs = [ pkgs.makeWrapper ];
+
+            postInstall = ''
+              wrapProgram $out/bin/muxrun \
+                --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.tmux ]}
+            '';
+
+            meta = with pkgs.lib; {
+              description = "A CLI tool that launches and manages multiple applications in groups using tmux";
+              homepage = "https://github.com/tkuramot/muxrun";
+              license = licenses.mit;
+              mainProgram = "muxrun";
+            };
+          };
+        }
+      );
+
       devShells = forAllSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
