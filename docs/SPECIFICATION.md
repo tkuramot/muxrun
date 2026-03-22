@@ -34,11 +34,11 @@ Each application requires a `dir` field. This can be overridden with the CLI `--
 
 ## Config File
 
-### Location
+### Resolution Order
 
-```
-~/.config/muxrun/config.toml
-```
+1. `--config / -c` flag (explicit path)
+2. `muxrun.toml` in CWD, then parent directories up to root
+3. `~/.config/muxrun/muxrun.toml` (global fallback)
 
 ### Structure
 

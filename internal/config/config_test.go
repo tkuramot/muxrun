@@ -2,6 +2,9 @@ package config
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -99,6 +102,79 @@ func TestConfig_FindGroups(t *testing.T) {
 	groups = cfg.FindGroups("nonexistent")
 	if len(groups) != 0 {
 		t.Errorf("expected no groups for nonexistent name")
+	}
+}
+
+func TestResolveConfigPath_ExplicitPath(t *testing.T) {
+	path, err := ResolveConfigPath("/tmp/custom.toml")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if path != "/tmp/custom.toml" {
+		t.Errorf("expected /tmp/custom.toml, got %q", path)
+	}
+}
+
+func TestResolveConfigPath_CWD(t *testing.T) {
+	dir := t.TempDir()
+	// Resolve symlinks (macOS /var -> /private/var)
+	dir, _ = filepath.EvalSymlinks(dir)
+	configFile := filepath.Join(dir, "muxrun.toml")
+	if err := os.WriteFile(configFile, []byte(""), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	origDir, _ := os.Getwd()
+	t.Cleanup(func() { os.Chdir(origDir) })
+	os.Chdir(dir)
+
+	path, err := ResolveConfigPath("")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if path != configFile {
+		t.Errorf("expected %q, got %q", configFile, path)
+	}
+}
+
+func TestResolveConfigPath_ParentDir(t *testing.T) {
+	parent := t.TempDir()
+	// Resolve symlinks (macOS /var -> /private/var)
+	parent, _ = filepath.EvalSymlinks(parent)
+	configFile := filepath.Join(parent, "muxrun.toml")
+	if err := os.WriteFile(configFile, []byte(""), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	child := filepath.Join(parent, "subdir")
+	os.Mkdir(child, 0755)
+
+	origDir, _ := os.Getwd()
+	t.Cleanup(func() { os.Chdir(origDir) })
+	os.Chdir(child)
+
+	path, err := ResolveConfigPath("")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if path != configFile {
+		t.Errorf("expected %q, got %q", configFile, path)
+	}
+}
+
+func TestResolveConfigPath_GlobalFallback(t *testing.T) {
+	// Use a temp dir with no muxrun.toml so it falls back to global
+	dir := t.TempDir()
+	origDir, _ := os.Getwd()
+	t.Cleanup(func() { os.Chdir(origDir) })
+	os.Chdir(dir)
+
+	path, err := ResolveConfigPath("")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.HasSuffix(path, filepath.Join(".config", "muxrun", "muxrun.toml")) {
+		t.Errorf("expected global fallback path, got %q", path)
 	}
 }
 

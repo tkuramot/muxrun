@@ -25,7 +25,7 @@ func newCompletionCommand() *cli.Command {
 }
 
 func completeGroupNames(c *cli.Context) {
-	cfg, err := loadConfig()
+	cfg, err := loadConfig(c)
 	if err != nil {
 		return
 	}

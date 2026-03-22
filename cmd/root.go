@@ -12,6 +12,13 @@ func NewApp() *cli.App {
 		Name:                 "muxrun",
 		Usage:                "Manage multiple applications with tmux",
 		EnableBashCompletion: true,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "config",
+				Aliases: []string{"c"},
+				Usage:   "Path to config file",
+			},
+		},
 		Commands: []*cli.Command{
 			newCheckCommand(),
 			newUpCommand(),

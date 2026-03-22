@@ -23,7 +23,7 @@ func newDownCommand() *cli.Command {
 		},
 		BashComplete: completeGroupNames,
 		Action: func(c *cli.Context) error {
-			cfg, err := loadConfig()
+			cfg, err := loadConfig(c)
 			if err != nil {
 				return err
 			}

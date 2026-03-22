@@ -34,7 +34,7 @@ func newUpCommand() *cli.Command {
 		},
 		BashComplete: completeGroupNames,
 		Action: func(c *cli.Context) error {
-			cfg, configPath, err := loadConfigWithPath()
+			cfg, configPath, err := loadConfigWithPath(c)
 			if err != nil {
 				return err
 			}
@@ -138,13 +138,13 @@ func spawnDaemons(cfg *config.Config, configPath, groupName string) error {
 	return nil
 }
 
-func loadConfig() (*config.Config, error) {
-	cfg, _, err := loadConfigWithPath()
+func loadConfig(c *cli.Context) (*config.Config, error) {
+	cfg, _, err := loadConfigWithPath(c)
 	return cfg, err
 }
 
-func loadConfigWithPath() (*config.Config, string, error) {
-	path, err := config.DefaultConfigPath()
+func loadConfigWithPath(c *cli.Context) (*config.Config, string, error) {
+	path, err := config.ResolveConfigPath(c.String("config"))
 	if err != nil {
 		return nil, "", err
 	}

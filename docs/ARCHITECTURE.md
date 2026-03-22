@@ -425,7 +425,7 @@ go test -tags=e2e ./...
 
 ### Config File
 
-- Location: `~/.config/muxrun/config.toml`
+- Resolution order: `--config` flag → `muxrun.toml` (CWD to root) → `~/.config/muxrun/muxrun.toml`
 - Group and app names: alphanumeric characters, hyphens, and underscores only
 
 ---

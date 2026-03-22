@@ -52,12 +52,38 @@ type rawApp struct {
 	Watch rawWatchConfig `toml:"watch"`
 }
 
-func DefaultConfigPath() (string, error) {
+const configFileName = "muxrun.toml"
+
+// ResolveConfigPath determines which config file to use.
+// Priority: explicit path > muxrun.toml in CWD or ancestor > ~/.config/muxrun/muxrun.toml
+func ResolveConfigPath(explicit string) (string, error) {
+	if explicit != "" {
+		return explicit, nil
+	}
+
+	// Walk from CWD to root looking for muxrun.toml
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("failed to get working directory: %w", err)
+	}
+	for {
+		candidate := filepath.Join(dir, configFileName)
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, nil
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+
+	// Fallback to global config
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("failed to get home directory: %w", err)
 	}
-	return filepath.Join(home, ".config", "muxrun", "config.toml"), nil
+	return filepath.Join(home, ".config", "muxrun", configFileName), nil
 }
 
 func Load(path string) (*Config, error) {

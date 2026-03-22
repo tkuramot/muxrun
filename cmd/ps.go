@@ -15,7 +15,7 @@ func newPsCommand() *cli.Command {
 		Name:  "ps",
 		Usage: "List application status",
 		Action: func(c *cli.Context) error {
-			cfg, err := loadConfig()
+			cfg, err := loadConfig(c)
 			if err != nil {
 				return err
 			}
