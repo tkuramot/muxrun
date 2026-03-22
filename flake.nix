@@ -18,7 +18,7 @@
         {
           default = pkgs.buildGoModule {
             pname = "muxrun";
-            version = "0.3.0";
+            version = "0.4.0";
             src = ./.;
             vendorHash = "sha256-LQuko0KeIZoIb1rmd+GyNUIUTB1yTP/BGMd7kgu39/0=";
 
