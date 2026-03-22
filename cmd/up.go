@@ -26,6 +26,11 @@ func newUpCommand() *cli.Command {
 				Aliases: []string{"i"},
 				Usage:   "Select apps interactively with fzf",
 			},
+			&cli.BoolFlag{
+				Name:    "force",
+				Aliases: []string{"f"},
+				Usage:   "Restart already running apps",
+			},
 		},
 		BashComplete: completeGroupNames,
 		Action: func(c *cli.Context) error {
@@ -49,6 +54,7 @@ func newUpCommand() *cli.Command {
 			if len(args) == 0 {
 				if err := r.Up(c.Context, runner.UpOptions{
 					DirOverride: c.String("dir"),
+					Force:       c.Bool("force"),
 				}); err != nil {
 					return err
 				}
@@ -58,6 +64,7 @@ func newUpCommand() *cli.Command {
 				if err := r.Up(c.Context, runner.UpOptions{
 					GroupName:   group,
 					DirOverride: c.String("dir"),
+					Force:       c.Bool("force"),
 				}); err != nil {
 					return err
 				}
@@ -89,6 +96,7 @@ func upInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner, configP
 			GroupName:   s.Group,
 			AppName:     s.App,
 			DirOverride: c.String("dir"),
+			Force:       c.Bool("force"),
 		}); err != nil {
 			return err
 		}

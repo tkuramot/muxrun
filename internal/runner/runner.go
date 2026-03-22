@@ -19,6 +19,7 @@ type UpOptions struct {
 	GroupName   string
 	AppName     string
 	DirOverride string
+	Force       bool
 }
 
 type DownOptions struct {
@@ -86,7 +87,13 @@ func (r *Runner) Up(ctx context.Context, opts UpOptions) error {
 			// Check if already running
 			hasWin, err := tmux.HasWindow(r.tmux, session, app.Name)
 			if err == nil && hasWin {
-				return fmt.Errorf("%w: %s/%s", tmux.ErrAppAlreadyRunning, g.Name, app.Name)
+				if opts.Force {
+					if err := r.tmux.KillWindow(session, app.Name); err != nil {
+						return fmt.Errorf("killing window for app %q: %w", app.Name, err)
+					}
+				} else {
+					return fmt.Errorf("%w: %s/%s", tmux.ErrAppAlreadyRunning, g.Name, app.Name)
+				}
 			}
 
 			if err := r.tmux.NewWindow(session, app.Name, dir); err != nil {
