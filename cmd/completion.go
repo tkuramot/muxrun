@@ -37,6 +37,12 @@ func completeGroupNames(c *cli.Context) {
 const zshCompletionScript = `#compdef muxrun
 
 _muxrun() {
+  # Complete file paths after --config or -c
+  if [[ "${words[CURRENT-1]}" == "--config" || "${words[CURRENT-1]}" == "-c" ]]; then
+    _files
+    return
+  fi
+
   local -a opts
   opts=("${(@f)$(${words[1]} ${words[@]:1} --generate-bash-completion)}")
   _describe 'command' opts
