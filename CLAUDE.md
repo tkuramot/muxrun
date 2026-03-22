@@ -18,6 +18,12 @@ go test ./internal/config/...   # Run tests for a specific package
 
 Dev environment uses Nix flakes (`nix develop` or direnv).
 
+## Release
+
+1. Update `version` in `flake.nix` to the new version
+2. Create a git tag (`git tag vX.Y.Z`)
+3. Push the tag (`git push origin vX.Y.Z`)
+
 ## Architecture
 
 - **`cmd/`** — CLI commands using `urfave/cli/v2`. Each subcommand (`up`, `down`, `ps`, `check`, `completion`) is its own file. The hidden `_daemon` command is the file-watcher daemon entry point.
