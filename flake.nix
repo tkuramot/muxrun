@@ -14,13 +14,15 @@
       packages = forAllSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
+          version = "0.5.1";
         in
         {
           default = pkgs.buildGoModule {
             pname = "muxrun";
-            version = "0.5.0";
+            inherit version;
             src = ./.;
             vendorHash = "sha256-LQuko0KeIZoIb1rmd+GyNUIUTB1yTP/BGMd7kgu39/0=";
+            ldflags = [ "-X github.com/tkuramot/muxrun/cmd.version=${version}" ];
 
             nativeBuildInputs = [ pkgs.makeWrapper ];
 
