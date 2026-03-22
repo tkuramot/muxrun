@@ -164,6 +164,10 @@ muxrun up backend --dir ~/projects/other-app
 # Select interactively with fzf
 muxrun up --interactive
 muxrun up -i
+
+# Restart already running apps
+muxrun up --force
+muxrun up backend -f
 ```
 
 **Options:**
@@ -172,6 +176,7 @@ muxrun up -i
 |--------|-------|-------------|
 | `--dir <path>` | — | Explicitly set working directory (overrides config dir) |
 | `--interactive` | `-i` | Select apps interactively with fzf |
+| `--force` | `-f` | Restart already running apps (kill existing window before re-creating) |
 
 **Positional arguments:** `[group...]` — Target group names (all groups if omitted)
 
@@ -181,7 +186,8 @@ muxrun up -i
 - Multiple group names: start all apps in each group
 - `--dir` specified: override config dir
 - `--interactive` specified: select targets with fzf (multi-select)
-- App already running: **error**
+- `--force` specified: kill existing windows and restart apps
+- App already running (without `--force`): **error**
 
 ### `muxrun down`
 
@@ -277,7 +283,8 @@ watch = { enabled = true, exclude = [
 | Config syntax error | Exit with error, display line number |
 | Specified group does not exist | Exit with error |
 | Specified app does not exist | Exit with error |
-| `up` on a running app | Exit with error |
+| `up` on a running app (without `--force`) | Exit with error |
+| `up --force` on a running app | Kill and restart |
 | `down` on a stopped app | Exit successfully (no-op) |
 | fzf cancelled | Exit with error |
 | fzf not available | Exit with error |

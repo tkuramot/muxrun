@@ -112,6 +112,8 @@ muxrun up backend                   # Start a specific group
 muxrun up backend frontend          # Start multiple groups
 muxrun up backend --dir ~/other     # Override working directory
 muxrun up -i                        # Select interactively with fzf
+muxrun up --force                   # Restart already running apps
+muxrun up backend -f                # Restart a specific group
 ```
 
 ### `muxrun down` — Stop applications

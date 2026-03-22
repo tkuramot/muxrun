@@ -20,9 +20,11 @@ Dev environment uses Nix flakes (`nix develop` or direnv).
 
 ## Release
 
-1. Update `version` in `flake.nix` to the new version
-2. Create a git tag (`git tag vX.Y.Z`)
-3. Push the tag (`git push origin vX.Y.Z`)
+1. Update docs if affected by the changes
+2. Update `version` in `flake.nix` to the new version
+3. Commit the version bump
+4. Create a git tag (`git tag vX.Y.Z`)
+5. Push commits and tag (`git push origin main --tags`)
 
 ## Architecture
 

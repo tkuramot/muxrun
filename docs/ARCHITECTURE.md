@@ -246,6 +246,7 @@ type UpOptions struct {
     GroupName   string
     AppName     string
     DirOverride string
+    Force       bool
 }
 
 type DownOptions struct {
