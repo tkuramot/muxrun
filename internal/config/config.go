@@ -58,7 +58,7 @@ const configFileName = "muxrun.toml"
 // Priority: explicit path > muxrun.toml in CWD or ancestor > ~/.config/muxrun/muxrun.toml
 func ResolveConfigPath(explicit string) (string, error) {
 	if explicit != "" {
-		return explicit, nil
+		return expandPath(explicit)
 	}
 
 	// Walk from CWD to root looking for muxrun.toml
