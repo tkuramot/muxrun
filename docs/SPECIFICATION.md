@@ -38,7 +38,10 @@ Each application requires a `dir` field. This can be overridden with the CLI `--
 
 1. `--config / -c` flag (explicit path)
 2. `muxrun.toml` in CWD, then parent directories up to root
-3. `~/.config/muxrun/muxrun.toml` (global fallback)
+
+### User-Level Defaults
+
+`~/.config/muxrun/config.toml` provides default values for CLI flags (e.g., `[flags.up] force = true`). These are applied when the corresponding flags are not explicitly provided on the command line.
 
 ### Structure
 

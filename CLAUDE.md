@@ -31,7 +31,7 @@ Dev environment uses Nix flakes (`nix develop` or direnv).
 - **`cmd/`** — CLI commands using `urfave/cli/v2`. Each subcommand (`up`, `down`, `ps`, `check`, `completion`) is its own file. The hidden `_daemon` command is the file-watcher daemon entry point.
 - **`internal/runner/`** — Core orchestration logic. `Runner` takes a `config.Config` and a `tmux.Client` interface, coordinates starting/stopping apps and querying status.
 - **`internal/tmux/`** — `Client` interface wrapping tmux shell commands. Has a mock implementation (`mock.go`) for unit testing.
-- **`internal/config/`** — TOML config loading and validation. Config resolution: `--config` flag → `muxrun.toml` walking up from CWD → `~/.config/muxrun/muxrun.toml`. Uses raw types for unmarshaling then converts to domain types.
+- **`internal/config/`** — TOML config loading and validation. Config resolution: `--config` flag → `muxrun.toml` walking up from CWD. User-level CLI flag defaults in `~/.config/muxrun/config.toml`. Uses raw types for unmarshaling then converts to domain types.
 - **`internal/daemon/`** — File-watch daemon lifecycle. `Spawn()` forks a detached `_daemon` process; `Run()` is the daemon main loop. PID files stored in `$TMPDIR/muxrun/`.
 - **`internal/watcher/`** — File system watcher (fsnotify) with exclude filters and debouncing.
 - **`internal/selector/`** — fzf-based interactive selection for `--interactive` mode.

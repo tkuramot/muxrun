@@ -10,7 +10,7 @@ A CLI tool that launches and manages multiple applications in groups using tmux.
 go install github.com/tkuramot/muxrun@latest
 ```
 
-2. Create `muxrun.toml` in your project directory (or `~/.config/muxrun/muxrun.toml` for a global config):
+2. Create `muxrun.toml` in your project directory:
 
 ```toml
 [[group]]
@@ -56,7 +56,17 @@ muxrun looks for a config file in the following order:
 
 1. `--config / -c` flag (explicit path, skips other lookup)
 2. `muxrun.toml` in the current directory, then parent directories up to the filesystem root
-3. `~/.config/muxrun/muxrun.toml` (global fallback)
+
+### User-level defaults
+
+You can set default values for CLI flags in `~/.config/muxrun/config.toml`:
+
+```toml
+[flags.up]
+force = true
+```
+
+These defaults are applied when the corresponding flags are not explicitly provided on the command line.
 
 ### Minimal example
 
