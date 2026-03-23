@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"fmt"
 	"os"
 	"syscall"
 	"time"
@@ -54,10 +53,4 @@ func IsProcessRunning(pid int) bool {
 	}
 	err = proc.Signal(syscall.Signal(0))
 	return err == nil
-}
-
-// GetChildPIDs returns child process IDs. On macOS/Linux we use pgrep.
-func GetChildPIDs(ppid int) ([]int, error) {
-	_ = ppid
-	return nil, fmt.Errorf("not implemented")
 }

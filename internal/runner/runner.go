@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/tkuramot/muxrun/internal/config"
 	"github.com/tkuramot/muxrun/internal/tmux"
@@ -196,13 +195,6 @@ func (r *Runner) Status() ([]AppStatus, error) {
 	}
 
 	return statuses, nil
-}
-
-func (r *Runner) PIDString(pid int) string {
-	if pid <= 0 {
-		return "-"
-	}
-	return strconv.Itoa(pid)
 }
 
 func (r *Runner) cleanupDefaultWindow(session string) {
