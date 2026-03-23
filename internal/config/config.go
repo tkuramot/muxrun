@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -98,7 +99,7 @@ func Load(path string) (*Config, error) {
 	var raw rawConfig
 	if err := toml.Unmarshal(data, &raw); err != nil {
 		var derr *toml.DecodeError
-		if ok := isDecodeError(err, &derr); ok {
+		if errors.As(err, &derr) {
 			row, col := derr.Position()
 			return nil, &ConfigSyntaxError{
 				Line:    row,
@@ -146,14 +147,6 @@ func convertRawConfig(raw *rawConfig, configDir string) (*Config, error) {
 		cfg.Groups = append(cfg.Groups, g)
 	}
 	return cfg, nil
-}
-
-func isDecodeError(err error, target **toml.DecodeError) bool {
-	if de, ok := err.(*toml.DecodeError); ok {
-		*target = de
-		return true
-	}
-	return false
 }
 
 func expandPath(path string) (string, error) {
