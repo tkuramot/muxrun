@@ -1,0 +1,6 @@
+{
+  "name": "muxrun",
+  "description": "Generate and manage muxrun configuration files",
+  "version": "0.1.0",
+  "repository": "https://github.com/tkuramot/muxrun"
+}

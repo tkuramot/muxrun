@@ -1,0 +1,14 @@
+{
+  "name": "muxrun",
+  "owner": { "name": "tkuramot" },
+  "metadata": {
+    "description": "Plugins for muxrun - a CLI tool that manages multiple applications using tmux"
+  },
+  "plugins": [
+    {
+      "name": "muxrun",
+      "source": "./plugin",
+      "description": "Generate muxrun.toml configuration files interactively"
+    }
+  ]
+}

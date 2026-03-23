@@ -26,6 +26,11 @@ Dev environment uses Nix flakes (`nix develop` or direnv).
 4. Create a git tag (`git tag vX.Y.Z`)
 5. Push commits and tag (`git push origin main --tags`)
 
+## Documentation
+
+- **`docs/config.md`** — Authoritative source for configuration schema, field definitions, and validation rules. Referenced by the Claude Code plugin via symlink.
+- **`docs/ARCHITECTURE.md`** — Technical architecture, daemon design, and dependency structure.
+
 ## Architecture
 
 - **`cmd/`** — CLI commands using `urfave/cli/v2`. Each subcommand (`up`, `down`, `ps`, `check`, `completion`) is its own file. The hidden `_daemon` command is the file-watcher daemon entry point.

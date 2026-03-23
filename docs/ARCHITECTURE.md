@@ -139,12 +139,6 @@ Timer (500ms): [==X [==X  [=========]→ callback fires
 - Session name: `muxrun-{group_name}`
 - Window name: `{app_name}`
 
-### Config File
-
-- Resolution order: `--config` flag → `muxrun.toml` (CWD to root)
-- User-level CLI flag defaults: `~/.config/muxrun/config.toml`
-- Group and app names: alphanumeric characters, hyphens, and underscores only
-
 ---
 
 ## 7. External Command Dependencies

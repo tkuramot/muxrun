@@ -107,18 +107,9 @@ dir = "~/projects/frontend"
 
 ### Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` (under `[[group]]`) | string | Yes | Group name (tmux session name) |
-| `dir` (under `[[group]]`) | string | Yes | Working directory for all apps in the group |
-| `name` (under `[[group.app]]`) | string | Yes | App name (tmux window name) |
-| `cmd` | string | Yes | Command to execute |
-| `watch.enabled` | bool | No | Enable file watching (default: `false`) |
-| `watch.exclude` | string[] | No | Regex patterns to exclude from watching |
+See [docs/config.md](docs/config.md) for the full field reference, watch configuration, and validation rules.
 
 When `watch` is enabled, muxrun starts a background daemon that restarts the app on file changes. The daemon starts with `muxrun up` and stops with `muxrun down`.
-
-Daemon logs: `$TMPDIR/muxrun/daemon-<group>.log` / PID files: `$TMPDIR/muxrun/daemon-<group>.pid`
 
 ## Usage
 
