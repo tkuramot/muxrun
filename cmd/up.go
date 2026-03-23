@@ -77,15 +77,18 @@ func newUpCommand() *cli.Command {
 	}
 }
 
-func upInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner, configPath string) error {
+func collectAppOptions(cfg *config.Config) []selector.AppOption {
 	var options []selector.AppOption
 	for _, g := range cfg.Groups {
 		for _, a := range g.Apps {
 			options = append(options, selector.AppOption{Group: g.Name, App: a.Name})
 		}
 	}
+	return options
+}
 
-	selected, err := selector.SelectApps(options)
+func upInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner, configPath string) error {
+	selected, err := selector.SelectApps(collectAppOptions(cfg))
 	if err != nil {
 		return err
 	}
