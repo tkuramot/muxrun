@@ -31,6 +31,19 @@ Dev environment uses Nix flakes (`nix develop` or direnv).
 - **`docs/config.md`** — Authoritative source for configuration schema, field definitions, and validation rules. Referenced by the Claude Code plugin via symlink.
 - **`docs/ARCHITECTURE.md`** — Technical architecture, daemon design, and dependency structure.
 
+## Plugin
+
+- **`plugin/.claude-plugin/plugin.json`** — Plugin metadata (name, version).
+- **`plugin/skills/create-config/SKILL.md`** — Skill definition for `/create-config`.
+- **`plugin/skills/create-config/config.md`** — Symlink to `docs/config.md`; updating docs automatically updates the skill's reference.
+
+### Updating the plugin
+
+1. Edit `plugin/skills/*/SKILL.md` for skill changes.
+2. `config.md` is a symlink to `docs/config.md` — update the docs side and it auto-reflects.
+3. Bump `version` in `plugin/.claude-plugin/plugin.json` for behavioral changes.
+4. Update the plugin section in `README.md` if user-facing instructions change.
+
 ## Architecture
 
 - **`cmd/`** — CLI commands using `urfave/cli/v2`. Each subcommand (`up`, `down`, `ps`, `check`, `completion`) is its own file. The hidden `_daemon` command is the file-watcher daemon entry point.

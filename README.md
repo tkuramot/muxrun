@@ -30,6 +30,29 @@ muxrun up
 
 This starts the `server` app inside a tmux session named `muxrun-myapp`. Use `muxrun down` to stop it.
 
+<details>
+<summary>Claude Code Plugin</summary>
+
+If you use [Claude Code](https://docs.anthropic.com/en/docs/claude-code), you can install the muxrun plugin to automatically generate `muxrun.toml` from your project structure.
+
+### Install
+
+```bash
+claude plugin add --from github.com/tkuramot/muxrun
+```
+
+### Usage
+
+After installing the plugin, use the `/create-config` skill to analyze your project and generate a config file:
+
+1. Run `/create-config` in Claude Code
+2. The skill scans your project structure and generates a tailored `muxrun.toml`
+3. Start your apps with `muxrun up`
+
+This saves you from writing `muxrun.toml` by hand — the skill understands common project layouts and creates the right configuration automatically.
+
+</details>
+
 ## Overview
 
 muxrun organizes applications into **groups**. Each group becomes a tmux session, and each app becomes a window within that session.
