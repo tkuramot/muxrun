@@ -52,7 +52,7 @@ func newUpCommand() *cli.Command {
 
 			args := c.Args().Slice()
 			if len(args) == 0 {
-				if err := r.Up(c.Context, runner.UpOptions{
+				if err := r.Up(runner.UpOptions{
 					DirOverride: c.String("dir"),
 					Force:       c.Bool("force"),
 				}); err != nil {
@@ -61,7 +61,7 @@ func newUpCommand() *cli.Command {
 				return spawnDaemons(cfg, configPath, "")
 			}
 			for _, group := range args {
-				if err := r.Up(c.Context, runner.UpOptions{
+				if err := r.Up(runner.UpOptions{
 					GroupName:   group,
 					DirOverride: c.String("dir"),
 					Force:       c.Bool("force"),
@@ -92,7 +92,7 @@ func upInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner, configP
 
 	groups := make(map[string]bool)
 	for _, s := range selected {
-		if err := r.Up(c.Context, runner.UpOptions{
+		if err := r.Up(runner.UpOptions{
 			GroupName:   s.Group,
 			AppName:     s.App,
 			DirOverride: c.String("dir"),

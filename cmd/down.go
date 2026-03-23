@@ -41,7 +41,7 @@ func newDownCommand() *cli.Command {
 
 			args := c.Args().Slice()
 			if len(args) == 0 {
-				if err := r.Down(c.Context, runner.DownOptions{}); err != nil {
+				if err := r.Down(runner.DownOptions{}); err != nil {
 					return err
 				}
 				// Stop all daemons
@@ -51,7 +51,7 @@ func newDownCommand() *cli.Command {
 				return nil
 			}
 			for _, group := range args {
-				if err := r.Down(c.Context, runner.DownOptions{GroupName: group}); err != nil {
+				if err := r.Down(runner.DownOptions{GroupName: group}); err != nil {
 					return err
 				}
 				daemon.StopDaemon(group)
@@ -82,7 +82,7 @@ func downInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner) error
 	stoppedPerGroup := make(map[string]int)
 
 	for _, s := range selected {
-		if err := r.Down(c.Context, runner.DownOptions{
+		if err := r.Down(runner.DownOptions{
 			GroupName: s.Group,
 			AppName:   s.App,
 		}); err != nil {

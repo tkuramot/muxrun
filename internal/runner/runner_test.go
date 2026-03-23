@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -35,7 +34,7 @@ func TestUp_AllGroups(t *testing.T) {
 	mock := tmux.NewMockClient()
 	r := New(testConfig(), mock)
 
-	err := r.Up(context.Background(), UpOptions{})
+	err := r.Up(UpOptions{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -53,7 +52,7 @@ func TestUp_SpecificGroup(t *testing.T) {
 	mock := tmux.NewMockClient()
 	r := New(testConfig(), mock)
 
-	err := r.Up(context.Background(), UpOptions{GroupName: "backend"})
+	err := r.Up(UpOptions{GroupName: "backend"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -70,7 +69,7 @@ func TestUp_SpecificApp(t *testing.T) {
 	mock := tmux.NewMockClient()
 	r := New(testConfig(), mock)
 
-	err := r.Up(context.Background(), UpOptions{GroupName: "backend", AppName: "api"})
+	err := r.Up(UpOptions{GroupName: "backend", AppName: "api"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -85,7 +84,7 @@ func TestUp_GroupNotFound(t *testing.T) {
 	mock := tmux.NewMockClient()
 	r := New(testConfig(), mock)
 
-	err := r.Up(context.Background(), UpOptions{GroupName: "nonexistent"})
+	err := r.Up(UpOptions{GroupName: "nonexistent"})
 	if !errors.Is(err, ErrGroupNotFound) {
 		t.Errorf("expected ErrGroupNotFound, got %v", err)
 	}
@@ -95,7 +94,7 @@ func TestUp_AppNotFound(t *testing.T) {
 	mock := tmux.NewMockClient()
 	r := New(testConfig(), mock)
 
-	err := r.Up(context.Background(), UpOptions{GroupName: "backend", AppName: "nonexistent"})
+	err := r.Up(UpOptions{GroupName: "backend", AppName: "nonexistent"})
 	if !errors.Is(err, ErrAppNotFound) {
 		t.Errorf("expected ErrAppNotFound, got %v", err)
 	}
@@ -105,8 +104,8 @@ func TestUp_AlreadyRunning(t *testing.T) {
 	mock := tmux.NewMockClient()
 	r := New(testConfig(), mock)
 
-	r.Up(context.Background(), UpOptions{GroupName: "backend", AppName: "api"})
-	err := r.Up(context.Background(), UpOptions{GroupName: "backend", AppName: "api"})
+	r.Up(UpOptions{GroupName: "backend", AppName: "api"})
+	err := r.Up(UpOptions{GroupName: "backend", AppName: "api"})
 	if !errors.Is(err, tmux.ErrAppAlreadyRunning) {
 		t.Errorf("expected ErrAppAlreadyRunning, got %v", err)
 	}
@@ -116,8 +115,8 @@ func TestDown_SpecificGroup(t *testing.T) {
 	mock := tmux.NewMockClient()
 	r := New(testConfig(), mock)
 
-	r.Up(context.Background(), UpOptions{GroupName: "backend"})
-	err := r.Down(context.Background(), DownOptions{GroupName: "backend"})
+	r.Up(UpOptions{GroupName: "backend"})
+	err := r.Down(DownOptions{GroupName: "backend"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -132,7 +131,7 @@ func TestDown_StoppedApp(t *testing.T) {
 	r := New(testConfig(), mock)
 
 	// Down on something that's not running should succeed silently
-	err := r.Down(context.Background(), DownOptions{GroupName: "backend", AppName: "api"})
+	err := r.Down(DownOptions{GroupName: "backend", AppName: "api"})
 	if err != nil {
 		t.Errorf("expected no error for stopped app, got %v", err)
 	}
@@ -142,7 +141,7 @@ func TestStatus(t *testing.T) {
 	mock := tmux.NewMockClient()
 	r := New(testConfig(), mock)
 
-	r.Up(context.Background(), UpOptions{GroupName: "backend"})
+	r.Up(UpOptions{GroupName: "backend"})
 
 	statuses, err := r.Status()
 	if err != nil {

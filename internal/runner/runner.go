@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -53,7 +52,7 @@ func New(cfg *config.Config, tmuxClient tmux.Client) *Runner {
 	}
 }
 
-func (r *Runner) Up(ctx context.Context, opts UpOptions) error {
+func (r *Runner) Up(opts UpOptions) error {
 	groups := r.cfg.FindGroups(opts.GroupName)
 	if opts.GroupName != "" && len(groups) == 0 {
 		return fmt.Errorf("%w: %s", ErrGroupNotFound, opts.GroupName)
@@ -113,7 +112,7 @@ func (r *Runner) Up(ctx context.Context, opts UpOptions) error {
 	return nil
 }
 
-func (r *Runner) Down(ctx context.Context, opts DownOptions) error {
+func (r *Runner) Down(opts DownOptions) error {
 	groups := r.cfg.FindGroups(opts.GroupName)
 	if opts.GroupName != "" && len(groups) == 0 {
 		return fmt.Errorf("%w: %s", ErrGroupNotFound, opts.GroupName)
