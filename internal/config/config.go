@@ -109,7 +109,12 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("%w: %s", ErrConfigSyntax, err)
 	}
 
-	cfg, err := convertRawConfig(&raw)
+	configDir, err := filepath.Abs(filepath.Dir(path))
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve config directory: %w", err)
+	}
+
+	cfg, err := convertRawConfig(&raw, configDir)
 	if err != nil {
 		return nil, err
 	}
@@ -117,12 +122,15 @@ func Load(path string) (*Config, error) {
 	return cfg, nil
 }
 
-func convertRawConfig(raw *rawConfig) (*Config, error) {
+func convertRawConfig(raw *rawConfig, configDir string) (*Config, error) {
 	cfg := &Config{}
 	for _, rg := range raw.Groups {
 		dir, err := expandPath(rg.Dir)
 		if err != nil {
 			return nil, err
+		}
+		if dir != "" && !filepath.IsAbs(dir) {
+			dir = filepath.Join(configDir, dir)
 		}
 		g := Group{Name: rg.Name, Dir: dir}
 		for _, ra := range rg.Apps {

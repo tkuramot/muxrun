@@ -178,6 +178,62 @@ func TestResolveConfigPath_GlobalFallback(t *testing.T) {
 	}
 }
 
+func TestLoad_RelativeDirResolvedFromConfigFile(t *testing.T) {
+	dir := t.TempDir()
+	dir, _ = filepath.EvalSymlinks(dir)
+
+	configContent := `
+[[group]]
+name = "backend"
+dir = "./backend"
+
+[[group.app]]
+name = "api"
+cmd = "go run main.go"
+`
+	configFile := filepath.Join(dir, "muxrun.toml")
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := Load(configFile)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expectedDir := filepath.Join(dir, "backend")
+	if cfg.Groups[0].Dir != expectedDir {
+		t.Errorf("expected dir %q, got %q", expectedDir, cfg.Groups[0].Dir)
+	}
+}
+
+func TestLoad_AbsoluteDirUnchanged(t *testing.T) {
+	dir := t.TempDir()
+
+	configContent := `
+[[group]]
+name = "backend"
+dir = "/absolute/path"
+
+[[group.app]]
+name = "api"
+cmd = "go run main.go"
+`
+	configFile := filepath.Join(dir, "muxrun.toml")
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := Load(configFile)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cfg.Groups[0].Dir != "/absolute/path" {
+		t.Errorf("expected dir '/absolute/path', got %q", cfg.Groups[0].Dir)
+	}
+}
+
 func TestGroup_FindApp(t *testing.T) {
 	g := &Group{
 		Name: "test",
