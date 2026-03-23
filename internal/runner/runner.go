@@ -133,7 +133,7 @@ func (r *Runner) Down(ctx context.Context, opts DownOptions) error {
 				return fmt.Errorf("%w: %s in group %s", ErrAppNotFound, opts.AppName, g.Name)
 			}
 
-			// Kill specific window
+			// Best-effort check; ignore error since we're tearing down
 			hasWin, _ := tmux.HasWindow(r.tmux, session, app.Name)
 			if !hasWin {
 				continue // already stopped, not an error
@@ -144,10 +144,10 @@ func (r *Runner) Down(ctx context.Context, opts DownOptions) error {
 			}
 			fmt.Printf("stopped %s/%s\n", g.Name, app.Name)
 
-			// If no more windows, kill session
+			// If no more windows, clean up the session (best-effort)
 			windows, _ := r.tmux.ListWindows(session)
 			if len(windows) == 0 {
-				r.tmux.KillSession(session)
+				_ = r.tmux.KillSession(session)
 			}
 		} else {
 			if err := r.tmux.KillSession(session); err != nil {
@@ -165,11 +165,17 @@ func (r *Runner) Status() ([]AppStatus, error) {
 
 	for _, g := range r.cfg.Groups {
 		session := tmux.SessionName(g.Name)
-		exists, _ := r.tmux.HasSession(session)
+		exists, err := r.tmux.HasSession(session)
+		if err != nil {
+			continue // skip group on tmux query failure
+		}
 
 		var windows []tmux.Window
 		if exists {
-			windows, _ = r.tmux.ListWindows(session)
+			windows, err = r.tmux.ListWindows(session)
+			if err != nil {
+				continue // skip group on tmux query failure
+			}
 		}
 
 		for _, app := range g.Apps {
@@ -206,7 +212,7 @@ func (r *Runner) cleanupDefaultWindow(session string) {
 	// We only remove it if there are other windows and it's unnamed or has default name
 	for _, w := range windows {
 		if w.Name == "zsh" || w.Name == "bash" || w.Name == "sh" || w.Name == "fish" {
-			r.tmux.KillWindow(session, w.Name)
+			_ = r.tmux.KillWindow(session, w.Name) // best-effort cleanup
 			return
 		}
 	}
