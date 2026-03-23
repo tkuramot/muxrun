@@ -39,6 +39,16 @@ func newUpCommand() *cli.Command {
 				return err
 			}
 
+			userCfg, err := config.LoadUserConfig()
+			if err != nil {
+				return err
+			}
+
+			force := c.Bool("force")
+			if !c.IsSet("force") {
+				force = userCfg.Flags.Up.Force
+			}
+
 			tmuxClient, err := tmux.NewClient()
 			if err != nil {
 				return err
@@ -47,14 +57,14 @@ func newUpCommand() *cli.Command {
 			r := runner.New(cfg, tmuxClient)
 
 			if c.Bool("interactive") {
-				return upInteractive(c, cfg, r, configPath)
+				return upInteractive(c, cfg, r, configPath, force)
 			}
 
 			args := c.Args().Slice()
 			if len(args) == 0 {
 				if err := r.Up(runner.UpOptions{
 					DirOverride: c.String("dir"),
-					Force:       c.Bool("force"),
+					Force:       force,
 				}); err != nil {
 					return err
 				}
@@ -64,7 +74,7 @@ func newUpCommand() *cli.Command {
 				if err := r.Up(runner.UpOptions{
 					GroupName:   group,
 					DirOverride: c.String("dir"),
-					Force:       c.Bool("force"),
+					Force:       force,
 				}); err != nil {
 					return err
 				}
@@ -87,7 +97,7 @@ func collectAppOptions(cfg *config.Config) []selector.AppOption {
 	return options
 }
 
-func upInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner, configPath string) error {
+func upInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner, configPath string, force bool) error {
 	selected, err := selector.SelectApps(collectAppOptions(cfg))
 	if err != nil {
 		return err
@@ -99,7 +109,7 @@ func upInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner, configP
 			GroupName:   s.Group,
 			AppName:     s.App,
 			DirOverride: c.String("dir"),
-			Force:       c.Bool("force"),
+			Force:       force,
 		}); err != nil {
 			return err
 		}

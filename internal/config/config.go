@@ -56,7 +56,8 @@ type rawApp struct {
 const configFileName = "muxrun.toml"
 
 // ResolveConfigPath determines which config file to use.
-// Priority: explicit path > muxrun.toml in CWD or ancestor > ~/.config/muxrun/muxrun.toml
+// Priority: explicit path > muxrun.toml in CWD or ancestor.
+// Returns ErrConfigNotFound if no config file is found.
 func ResolveConfigPath(explicit string) (string, error) {
 	if explicit != "" {
 		return expandPath(explicit)
@@ -79,12 +80,7 @@ func ResolveConfigPath(explicit string) (string, error) {
 		dir = parent
 	}
 
-	// Fallback to global config
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", fmt.Errorf("failed to get home directory: %w", err)
-	}
-	return filepath.Join(home, ".config", "muxrun", configFileName), nil
+	return "", ErrConfigNotFound
 }
 
 func Load(path string) (*Config, error) {

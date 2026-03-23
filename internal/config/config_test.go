@@ -4,7 +4,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -162,19 +161,18 @@ func TestResolveConfigPath_ParentDir(t *testing.T) {
 	}
 }
 
-func TestResolveConfigPath_GlobalFallback(t *testing.T) {
-	// Use a temp dir with no muxrun.toml so it falls back to global
+func TestResolveConfigPath_NotFound(t *testing.T) {
 	dir := t.TempDir()
 	origDir, _ := os.Getwd()
 	t.Cleanup(func() { os.Chdir(origDir) })
 	os.Chdir(dir)
 
-	path, err := ResolveConfigPath("")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	_, err := ResolveConfigPath("")
+	if err == nil {
+		t.Fatal("expected error when no muxrun.toml exists")
 	}
-	if !strings.HasSuffix(path, filepath.Join(".config", "muxrun", "muxrun.toml")) {
-		t.Errorf("expected global fallback path, got %q", path)
+	if !errors.Is(err, ErrConfigNotFound) {
+		t.Errorf("expected ErrConfigNotFound, got %v", err)
 	}
 }
 
