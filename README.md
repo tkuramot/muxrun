@@ -1,5 +1,7 @@
 # muxrun
 
+`/mʌks.rʌn/`
+
 A CLI tool that launches and manages multiple applications in groups using tmux.
 
 ## Quick Start
