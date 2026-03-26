@@ -167,6 +167,9 @@ muxrun logs backend api       # Show buffered output for an app
 muxrun logs -f backend api    # Stream output in real-time (Ctrl-C to stop)
 ```
 
+> [!TIP]
+> If you're familiar with tmux, each app runs in its own window inside a `muxrun-<group>` session — attach directly for full scrollback and search.
+
 ### `muxrun check` — Validate config file
 
 ```bash
