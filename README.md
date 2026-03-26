@@ -2,7 +2,9 @@
 
 `/mʌks.rʌn/`
 
-A CLI tool that launches and manages multiple applications in groups using tmux.
+Managing multiple processes across terminals gets messy: scattered tabs, no clear picture of what's running where, and manual restarts every time you switch branches or worktrees.
+
+muxrun keeps it simple — `muxrun up` to start everything, `muxrun ps` to see what's running and from which directory, `muxrun up` again to restart.
 
 ## Quick Start
 
@@ -167,12 +169,6 @@ muxrun logs -f backend api    # Stream output in real-time (Ctrl-C to stop)
 ```bash
 muxrun check
 ```
-
-## Use Cases
-
-- **Microservice development** — Start multiple processes (API server, worker, frontend, etc.) at once with `muxrun up` instead of opening multiple terminals.
-- **Auto-restart on file changes** — Enable `watch` to restart apps when source files change, useful for languages without built-in hot reload (e.g., Go).
-- **Selective group control** — Stop or restart only a subset of processes by group (e.g., `muxrun down backend`) without affecting the rest.
 
 ## Working with tmux Sessions
 
