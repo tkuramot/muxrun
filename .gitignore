@@ -34,6 +34,7 @@ go.work.sum
 # .vscode/
 
 .claude/settings.local.json
+muxrun.toml
 
 # Nix
 result
