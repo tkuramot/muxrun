@@ -146,7 +146,7 @@ muxrun up backend                   # Start a specific group
 muxrun up backend frontend          # Start multiple groups
 muxrun up backend --dir ~/other     # Override working directory
 muxrun up --force                   # Restart already running apps
-muxrun up backend -f                # Restart a specific group
+muxrun up -f backend                # Restart a specific group
 ```
 
 ### `muxrun down` — Stop applications
@@ -166,6 +166,13 @@ GROUP       APP       STATUS    PID      DIR
 backend     api       running   12345    ~/projects/myapp/cmd/api
 backend     worker    running   12346    ~/projects/myapp/cmd/worker
 frontend    dev       stopped   -        ~/projects/frontend
+```
+
+### `muxrun logs` — View pane output
+
+```bash
+muxrun logs backend api       # Show buffered output for an app
+muxrun logs -f backend api    # Stream output in real-time (Ctrl-C to stop)
 ```
 
 ### `muxrun check` — Validate config file
