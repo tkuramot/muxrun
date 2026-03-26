@@ -21,7 +21,6 @@ muxrun/
 │   ├── watcher/    # File system watching, debouncing, exclude filters
 │   ├── daemon/     # File-watch daemon spawning and PID management
 │   ├── runner/     # App start/stop/status orchestration
-│   ├── selector/   # fzf-based interactive selection
 │   └── ui/         # Table formatting for output
 ├── docs/           # Documentation
 └── testdata/       # Test fixture TOML files
@@ -62,7 +61,7 @@ muxrun/
 
 ### Dependency Direction
 
-- `cmd/` → `internal/runner/`, `internal/daemon/`, `internal/config/`, `internal/selector/`
+- `cmd/` → `internal/runner/`, `internal/daemon/`, `internal/config/`
 - `internal/runner/` → `internal/tmux/`, `internal/config/`
 - `internal/daemon/` → `internal/tmux/`, `internal/watcher/`, `internal/config/`, `internal/runner/`
 - Each `internal/` package is loosely coupled (`daemon` only references `runner`'s `process.go` utilities)
@@ -128,7 +127,7 @@ Timer (500ms): [==X [==X  [=========]→ callback fires
 | 0 | Success |
 | 1 | General error |
 | 2 | Command-line argument error |
-| 130 | User cancellation (Ctrl+C, fzf cancel) |
+| 130 | User cancellation (Ctrl+C) |
 
 ---
 
@@ -146,4 +145,3 @@ Timer (500ms): [==X [==X  [=========]→ callback fires
 | Command | Required | Purpose |
 |---------|----------|---------|
 | `tmux` | Yes | Session and window management |
-| `fzf` | No | Only for the `--interactive` option |

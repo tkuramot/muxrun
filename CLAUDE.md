@@ -52,7 +52,6 @@ Dev environment uses Nix flakes (`nix develop` or direnv).
 - **`internal/config/`** — TOML config loading and validation. Config resolution: `--config` flag → `muxrun.toml` walking up from CWD. User-level CLI flag defaults in `~/.config/muxrun/config.toml`. Uses raw types for unmarshaling then converts to domain types.
 - **`internal/daemon/`** — File-watch daemon lifecycle. `Spawn()` forks a detached `_daemon` process; `Run()` is the daemon main loop. PID files stored in `$TMPDIR/muxrun/`.
 - **`internal/watcher/`** — File system watcher (fsnotify) with exclude filters and debouncing.
-- **`internal/selector/`** — fzf-based interactive selection for `--interactive` mode.
 - **`internal/ui/`** — Table formatting for `ps` output.
 
 ## Key Design Patterns

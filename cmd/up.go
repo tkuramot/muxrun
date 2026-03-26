@@ -6,7 +6,6 @@ import (
 	"github.com/tkuramot/muxrun/internal/config"
 	"github.com/tkuramot/muxrun/internal/daemon"
 	"github.com/tkuramot/muxrun/internal/runner"
-	"github.com/tkuramot/muxrun/internal/selector"
 	"github.com/tkuramot/muxrun/internal/tmux"
 	"github.com/urfave/cli/v2"
 )
@@ -20,11 +19,6 @@ func newUpCommand() *cli.Command {
 			&cli.StringFlag{
 				Name:  "dir",
 				Usage: "Override execution directory",
-			},
-			&cli.BoolFlag{
-				Name:    "interactive",
-				Aliases: []string{"i"},
-				Usage:   "Select apps interactively with fzf",
 			},
 			&cli.BoolFlag{
 				Name:    "force",
@@ -56,10 +50,6 @@ func newUpCommand() *cli.Command {
 
 			r := runner.New(cfg, tmuxClient)
 
-			if c.Bool("interactive") {
-				return upInteractive(c, cfg, r, configPath, force)
-			}
-
 			args := c.Args().Slice()
 			if len(args) == 0 {
 				if err := r.Up(runner.UpOptions{
@@ -85,43 +75,6 @@ func newUpCommand() *cli.Command {
 			return nil
 		},
 	}
-}
-
-func collectAppOptions(cfg *config.Config) []selector.AppOption {
-	var options []selector.AppOption
-	for _, g := range cfg.Groups {
-		for _, a := range g.Apps {
-			options = append(options, selector.AppOption{Group: g.Name, App: a.Name})
-		}
-	}
-	return options
-}
-
-func upInteractive(c *cli.Context, cfg *config.Config, r *runner.Runner, configPath string, force bool) error {
-	selected, err := selector.SelectApps(collectAppOptions(cfg))
-	if err != nil {
-		return err
-	}
-
-	groups := make(map[string]bool)
-	for _, s := range selected {
-		if err := r.Up(runner.UpOptions{
-			GroupName:   s.Group,
-			AppName:     s.App,
-			DirOverride: c.String("dir"),
-			Force:       force,
-		}); err != nil {
-			return err
-		}
-		groups[s.Group] = true
-	}
-
-	for group := range groups {
-		if err := spawnDaemons(cfg, configPath, group); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func spawnDaemons(cfg *config.Config, configPath, groupName string) error {

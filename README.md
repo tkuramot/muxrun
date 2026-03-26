@@ -72,7 +72,6 @@ muxrun
 ## Requirements
 
 - tmux 3.0+
-- fzf (only for the `--interactive` option)
 
 ## Configuration
 
@@ -146,7 +145,6 @@ muxrun up                           # Start all groups
 muxrun up backend                   # Start a specific group
 muxrun up backend frontend          # Start multiple groups
 muxrun up backend --dir ~/other     # Override working directory
-muxrun up -i                        # Select interactively with fzf
 muxrun up --force                   # Restart already running apps
 muxrun up backend -f                # Restart a specific group
 ```
@@ -158,7 +156,6 @@ muxrun up backend -f                # Restart a specific group
 ```bash
 muxrun down                         # Stop all groups
 muxrun down backend                 # Stop a specific group
-muxrun down -i                      # Select interactively with fzf
 ```
 
 ### `muxrun ps` — Check status
