@@ -82,17 +82,6 @@ muxrun looks for a config file in the following order:
 1. `--config / -c` flag (explicit path, skips other lookup)
 2. `muxrun.toml` in the current directory, then parent directories up to the filesystem root
 
-### User-level defaults
-
-You can set default values for CLI flags in `~/.config/muxrun/config.toml`:
-
-```toml
-[flags.up]
-force = true
-```
-
-These defaults are applied when the corresponding flags are not explicitly provided on the command line.
-
 ### Minimal example
 
 ```toml
@@ -145,8 +134,6 @@ muxrun up                           # Start all groups
 muxrun up backend                   # Start a specific group
 muxrun up backend frontend          # Start multiple groups
 muxrun up backend --dir ~/other     # Override working directory
-muxrun up --force                   # Restart already running apps
-muxrun up -f backend                # Restart a specific group
 ```
 
 ### `muxrun down` — Stop applications

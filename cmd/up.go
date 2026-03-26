@@ -20,27 +20,12 @@ func newUpCommand() *cli.Command {
 				Name:  "dir",
 				Usage: "Override execution directory",
 			},
-			&cli.BoolFlag{
-				Name:    "force",
-				Aliases: []string{"f"},
-				Usage:   "Restart already running apps",
-			},
 		},
 		BashComplete: completeGroupNames,
 		Action: func(c *cli.Context) error {
 			cfg, configPath, err := loadConfigWithPath(c)
 			if err != nil {
 				return err
-			}
-
-			userCfg, err := config.LoadUserConfig()
-			if err != nil {
-				return err
-			}
-
-			force := c.Bool("force")
-			if !c.IsSet("force") {
-				force = userCfg.Flags.Up.Force
 			}
 
 			tmuxClient, err := tmux.NewClient()
@@ -54,7 +39,6 @@ func newUpCommand() *cli.Command {
 			if len(args) == 0 {
 				if err := r.Up(runner.UpOptions{
 					DirOverride: c.String("dir"),
-					Force:       force,
 				}); err != nil {
 					return err
 				}
@@ -64,7 +48,6 @@ func newUpCommand() *cli.Command {
 				if err := r.Up(runner.UpOptions{
 					GroupName:   group,
 					DirOverride: c.String("dir"),
-					Force:       force,
 				}); err != nil {
 					return err
 				}

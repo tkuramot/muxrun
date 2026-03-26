@@ -17,7 +17,6 @@ type UpOptions struct {
 	GroupName   string
 	AppName     string
 	DirOverride string
-	Force       bool
 }
 
 type DownOptions struct {
@@ -85,12 +84,12 @@ func (r *Runner) Up(opts UpOptions) error {
 			// Check if already running
 			hasWin, err := tmux.HasWindow(r.tmux, session, app.Name)
 			if err == nil && hasWin {
-				if opts.Force {
-					if err := r.tmux.KillWindow(session, app.Name); err != nil {
-						return fmt.Errorf("killing window for app %q: %w", app.Name, err)
-					}
-				} else {
-					return fmt.Errorf("%w: %s/%s", tmux.ErrAppAlreadyRunning, g.Name, app.Name)
+				if err := r.tmux.KillWindow(session, app.Name); err != nil {
+					return fmt.Errorf("killing window for app %q: %w", app.Name, err)
+				}
+				// Killing the last window destroys the session; re-create if needed.
+				if err := tmux.EnsureSession(r.tmux, session); err != nil {
+					return fmt.Errorf("recreating session for group %q: %w", g.Name, err)
 				}
 			}
 

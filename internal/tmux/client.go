@@ -12,8 +12,7 @@ import (
 const InitWindowName = "__muxrun_init__"
 
 var (
-	ErrTmuxNotAvailable  = errors.New("tmux is not available")
-	ErrAppAlreadyRunning = errors.New("app already running")
+	ErrTmuxNotAvailable = errors.New("tmux is not available")
 )
 
 type Client interface {

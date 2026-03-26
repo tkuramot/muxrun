@@ -7,15 +7,6 @@ muxrun looks for a config file in the following order:
 1. `--config / -c` flag (explicit path, skips other lookup)
 2. `muxrun.toml` in the current directory, then parent directories up to the filesystem root
 
-## User-Level Defaults
-
-`~/.config/muxrun/config.toml` provides default values for CLI flags. These are applied when the corresponding flags are not explicitly provided on the command line.
-
-```toml
-[flags.up]
-force = true
-```
-
 ## Config Structure
 
 ```toml

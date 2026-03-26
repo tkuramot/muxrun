@@ -122,8 +122,8 @@ func TestUp_AlreadyRunning(t *testing.T) {
 
 	r.Up(UpOptions{GroupName: "backend", AppName: "api"})
 	err := r.Up(UpOptions{GroupName: "backend", AppName: "api"})
-	if !errors.Is(err, tmux.ErrAppAlreadyRunning) {
-		t.Errorf("expected ErrAppAlreadyRunning, got %v", err)
+	if err != nil {
+		t.Errorf("expected no error on re-up, got %v", err)
 	}
 }
 
