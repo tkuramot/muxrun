@@ -2,11 +2,15 @@ package tmux
 
 // MockClient is a test double for tmux.Client.
 type MockClient struct {
-	Sessions map[string][]Window
+	Sessions          map[string][]Window
+	CapturePaneOutput map[string]string
 }
 
 func NewMockClient() *MockClient {
-	return &MockClient{Sessions: make(map[string][]Window)}
+	return &MockClient{
+		Sessions:          make(map[string][]Window),
+		CapturePaneOutput: make(map[string]string),
+	}
 }
 
 func (m *MockClient) HasSession(name string) (bool, error) {
@@ -66,3 +70,13 @@ func (m *MockClient) GetPanePID(session, window string) (int, error) {
 	}
 	return 0, nil
 }
+
+func (m *MockClient) CapturePane(session, window string) (string, error) {
+	if out, ok := m.CapturePaneOutput[session+":"+window]; ok {
+		return out, nil
+	}
+	return "", nil
+}
+
+func (m *MockClient) PipePane(session, window, cmd string) error { return nil }
+func (m *MockClient) UnpipePane(session, window string) error    { return nil }

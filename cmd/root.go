@@ -38,6 +38,7 @@ func NewApp() *cli.App {
 			newUpCommand(),
 			newDownCommand(),
 			newPsCommand(),
+			newLogsCommand(),
 			newDaemonCommand(),
 			newCompletionCommand(),
 		},

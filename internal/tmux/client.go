@@ -26,6 +26,9 @@ type Client interface {
 	ListWindows(session string) ([]Window, error)
 	SendKeys(session, window, keys string) error
 	GetPanePID(session, window string) (int, error)
+	CapturePane(session, window string) (string, error)
+	PipePane(session, window, cmd string) error
+	UnpipePane(session, window string) error
 }
 
 type Session struct {
@@ -146,4 +149,25 @@ func (c *client) GetPanePID(session, window string) (int, error) {
 		return 0, err
 	}
 	return strconv.Atoi(out)
+}
+
+func (c *client) CapturePane(session, window string) (string, error) {
+	cmd := exec.Command(c.tmuxPath, "capture-pane", "-t", session+":"+window, "-p", "-S", "-", "-J")
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("tmux capture-pane: %s", strings.TrimSpace(stderr.String()))
+	}
+	return stdout.String(), nil
+}
+
+func (c *client) PipePane(session, window, cmd string) error {
+	_, err := c.run("pipe-pane", "-t", session+":"+window, cmd)
+	return err
+}
+
+func (c *client) UnpipePane(session, window string) error {
+	_, err := c.run("pipe-pane", "-t", session+":"+window)
+	return err
 }
