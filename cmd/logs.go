@@ -18,7 +18,7 @@ func newLogsCommand() *cli.Command {
 		Name:         "logs",
 		Usage:        "Show pane output for a running application",
 		ArgsUsage:    "<group> <app>",
-		BashComplete: completeGroupNames,
+		BashComplete: completeLogsArgs,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:    "follow",

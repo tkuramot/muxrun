@@ -34,6 +34,44 @@ func completeGroupNames(c *cli.Context) {
 	}
 }
 
+
+func completeLogsArgs(c *cli.Context) {
+	cfg, err := loadConfig(c)
+	if err != nil {
+		return
+	}
+	args := c.Args().Slice()
+	switch len(args) {
+	case 0:
+		for _, g := range cfg.Groups {
+			fmt.Println(g.Name)
+		}
+	case 1:
+		// If args[0] exactly matches a group name, the group is complete — show apps.
+		// Otherwise the user is still typing the group name — show groups.
+		for _, g := range cfg.Groups {
+			if g.Name == args[0] {
+				for _, a := range g.Apps {
+					fmt.Println(a.Name)
+				}
+				return
+			}
+		}
+		for _, g := range cfg.Groups {
+			fmt.Println(g.Name)
+		}
+	default:
+		for _, g := range cfg.Groups {
+			if g.Name == args[0] {
+				for _, a := range g.Apps {
+					fmt.Println(a.Name)
+				}
+				return
+			}
+		}
+	}
+}
+
 const zshCompletionScript = `#compdef muxrun
 
 _muxrun() {
