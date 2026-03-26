@@ -207,11 +207,9 @@ func (r *Runner) cleanupDefaultWindow(session string) {
 	if err != nil || len(windows) <= 1 {
 		return
 	}
-	// The default window created by new-session is typically at index 0
-	// We only remove it if there are other windows and it's unnamed or has default name
 	for _, w := range windows {
-		if w.Name == "zsh" || w.Name == "bash" || w.Name == "sh" || w.Name == "fish" {
-			_ = r.tmux.KillWindow(session, w.Name) // best-effort cleanup
+		if w.Name == tmux.InitWindowName {
+			_ = r.tmux.KillWindow(session, w.Name)
 			return
 		}
 	}

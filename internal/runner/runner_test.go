@@ -100,6 +100,22 @@ func TestUp_AppNotFound(t *testing.T) {
 	}
 }
 
+func TestUp_DefaultWindowCleaned(t *testing.T) {
+	mock := tmux.NewMockClient()
+	r := New(testConfig(), mock)
+
+	err := r.Up(UpOptions{GroupName: "backend"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	for _, w := range mock.Sessions["muxrun-backend"] {
+		if w.Name == tmux.InitWindowName {
+			t.Error("default init window should have been cleaned up")
+		}
+	}
+}
+
 func TestUp_AlreadyRunning(t *testing.T) {
 	mock := tmux.NewMockClient()
 	r := New(testConfig(), mock)

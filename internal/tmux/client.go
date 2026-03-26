@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const InitWindowName = "__muxrun_init__"
+
 var (
 	ErrTmuxNotAvailable  = errors.New("tmux is not available")
 	ErrAppAlreadyRunning = errors.New("app already running")
@@ -70,7 +72,7 @@ func (c *client) HasSession(name string) (bool, error) {
 }
 
 func (c *client) NewSession(name string) error {
-	_, err := c.run("new-session", "-d", "-s", name)
+	_, err := c.run("new-session", "-d", "-s", name, "-n", InitWindowName)
 	return err
 }
 

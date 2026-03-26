@@ -16,7 +16,7 @@ func (m *MockClient) HasSession(name string) (bool, error) {
 
 func (m *MockClient) NewSession(name string) error {
 	if _, ok := m.Sessions[name]; !ok {
-		m.Sessions[name] = nil
+		m.Sessions[name] = []Window{{Name: InitWindowName}}
 	}
 	return nil
 }
