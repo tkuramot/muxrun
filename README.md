@@ -147,6 +147,9 @@ muxrun down                         # Stop all groups
 muxrun down backend                 # Stop a specific group
 ```
 
+> [!WARNING]
+> Use `muxrun down` to stop sessions. Killing sessions directly with `tmux kill-session` may leave file watch daemons running.
+
 ### `muxrun ps` — Check status
 
 ```bash
@@ -170,40 +173,33 @@ muxrun logs -f backend api    # Stream output in real-time (Ctrl-C to stop)
 muxrun check
 ```
 
-## Working with tmux Sessions
+## Tips
 
-muxrun creates tmux sessions named `muxrun-<group>`. Attach to a session to see app output:
+### Using with git worktrees
 
-```bash
-tmux attach -t muxrun-backend
+When `dir` is a relative path, it is resolved relative to the `muxrun.toml` location. Copy `muxrun.toml` into each worktree at creation time to treat each worktree as an independent environment.
+
+```toml
+[[group]]
+name = "backend"
+dir = "."          # resolved relative to muxrun.toml location
+
+  [[group.app]]
+  name = "api"
+  cmd = "go run main.go"
 ```
 
-> [!WARNING]
-> Use `muxrun down` to stop sessions. Killing sessions directly with `tmux kill-session` may leave file watch daemons running.
-
-> [!NOTE]
-> If you manually stop a process inside an attached window, `muxrun ps` reflects the updated status.
-
-<details>
-<summary>Basic tmux operations (prefix: Ctrl-b)</summary>
-
-| Action | Key | Description |
-|--------|-----|-------------|
-| Next window | `Ctrl-b` `n` | Switch to the next app |
-| Previous window | `Ctrl-b` `p` | Switch to the previous app |
-| Window list | `Ctrl-b` `w` | List all windows and select |
-| Detach | `Ctrl-b` `d` | Detach from session (processes keep running) |
-| Scroll mode | `Ctrl-b` `[` | Scroll through logs (`q` to exit) |
+With the same group name across worktrees, running `muxrun up` always restarts the apps for the current worktree — even if the session is already running from a different one:
 
 ```bash
-# List muxrun-managed sessions
-tmux list-sessions | grep muxrun-
+# working in worktree-A
+cd ~/repo-worktree-A && muxrun up   # muxrun-backend starts in A
 
-# List windows in a session
-tmux list-windows -t muxrun-backend
+# switch to worktree-B
+cd ~/repo-worktree-B && muxrun up   # same session restarts in B
 ```
 
-</details>
+Copying `muxrun.toml` on worktree creation can be automated with a `post-checkout` hook or a worktree management tool like [git-worktree-runner](https://github.com/coderabbitai/git-worktree-runner).
 
 ## Shell Completion
 
