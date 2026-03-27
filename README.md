@@ -20,15 +20,24 @@ claude plugin marketplace add https://github.com/tkuramot/muxrun
 claude plugin install muxrun@muxrun
 ```
 
-**Usage**
+**Skills**
 
-After installing the plugin, use the `/create-config` skill to analyze your project and generate a config file:
+| Skill | Description |
+|-------|-------------|
+| `/create-config` | Analyze your project structure and generate a tailored `muxrun.toml` |
+| `/debug-logs` | Fetch logs from a running app and analyze them for errors |
+
+**`/create-config`**
 
 1. Run `/create-config` in Claude Code
 2. The skill scans your project structure and generates a tailored `muxrun.toml`
 3. Start your apps with `muxrun up`
 
-This saves you from writing `muxrun.toml` by hand — the skill understands common project layouts and creates the right configuration automatically.
+**`/debug-logs`**
+
+1. Start your apps with `muxrun up`
+2. Run `/debug-logs` in Claude Code when you need to investigate an issue
+3. The skill discovers running apps via `muxrun ps`, fetches their logs, and analyzes them
 
 </details>
 
