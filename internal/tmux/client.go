@@ -35,9 +35,11 @@ type Session struct {
 }
 
 type Window struct {
-	Name string
-	PID  int
-	Dir  string
+	Name       string
+	PID        int
+	Dir        string
+	Dead       bool
+	DeadStatus int
 }
 
 type client struct {
@@ -104,7 +106,10 @@ func (c *client) ListSessions() ([]Session, error) {
 }
 
 func (c *client) NewWindow(session, window, dir string) error {
-	_, err := c.run("new-window", "-t", session, "-n", window, "-c", dir)
+	if _, err := c.run("new-window", "-t", session, "-n", window, "-c", dir); err != nil {
+		return err
+	}
+	_, err := c.run("set-option", "-t", session+":"+window, "remain-on-exit", "on")
 	return err
 }
 
@@ -114,7 +119,7 @@ func (c *client) KillWindow(session, window string) error {
 }
 
 func (c *client) ListWindows(session string) ([]Window, error) {
-	out, err := c.run("list-windows", "-t", session, "-F", "#{window_name} #{pane_pid} #{pane_current_path}")
+	out, err := c.run("list-windows", "-t", session, "-F", "#{window_name} #{pane_pid} #{pane_current_path} #{pane_dead} #{pane_dead_status}")
 	if err != nil {
 		return nil, err
 	}
@@ -123,16 +128,21 @@ func (c *client) ListWindows(session string) ([]Window, error) {
 	}
 	var windows []Window
 	for _, line := range strings.Split(out, "\n") {
-		parts := strings.SplitN(line, " ", 3)
+		parts := strings.SplitN(line, " ", 5)
 		if len(parts) < 2 {
 			continue
 		}
 		pid, _ := strconv.Atoi(parts[1])
 		dir := ""
-		if len(parts) == 3 {
+		if len(parts) >= 3 {
 			dir = parts[2]
 		}
-		windows = append(windows, Window{Name: parts[0], PID: pid, Dir: dir})
+		dead := len(parts) >= 4 && parts[3] == "1"
+		deadStatus := 0
+		if len(parts) >= 5 {
+			deadStatus, _ = strconv.Atoi(parts[4])
+		}
+		windows = append(windows, Window{Name: parts[0], PID: pid, Dir: dir, Dead: dead, DeadStatus: deadStatus})
 	}
 	return windows, nil
 }

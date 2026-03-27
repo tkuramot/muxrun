@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -37,10 +38,14 @@ func newPsCommand() *cli.Command {
 				if s.PID > 0 {
 					pid = strconv.Itoa(s.PID)
 				}
+				statusStr := string(s.Status)
+				if s.Exited {
+					statusStr = fmt.Sprintf("exited (%d)", s.ExitStatus)
+				}
 				rows = append(rows, ui.TableRow{
 					Group:  s.Group,
 					App:    s.App,
-					Status: string(s.Status),
+					Status: statusStr,
 					PID:    pid,
 					Dir:    s.Dir,
 				})

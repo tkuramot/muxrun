@@ -24,11 +24,13 @@ type DownOptions struct {
 }
 
 type AppStatus struct {
-	Group  string
-	App    string
-	Status Status
-	PID    int
-	Dir    string
+	Group      string
+	App        string
+	Status     Status
+	PID        int
+	Dir        string
+	Exited     bool
+	ExitStatus int
 }
 
 type Status string
@@ -91,7 +93,7 @@ func (r *Runner) Up(opts UpOptions) error {
 				return fmt.Errorf("creating window for app %q: %w", app.Name, err)
 			}
 
-			if err := r.tmux.SendKeys(session, app.Name, app.Cmd); err != nil {
+			if err := r.tmux.SendKeys(session, app.Name, app.Cmd+"; exit $?"); err != nil {
 				return fmt.Errorf("sending command for app %q: %w", app.Name, err)
 			}
 
@@ -180,9 +182,15 @@ func (r *Runner) Status() ([]AppStatus, error) {
 			if exists {
 				for _, w := range windows {
 					if w.Name == app.Name {
-						s.Status = StatusRunning
-						s.PID = w.PID
-						s.Dir = w.Dir
+						if w.Dead {
+							s.Status = StatusStopped
+							s.Exited = true
+							s.ExitStatus = w.DeadStatus
+						} else {
+							s.Status = StatusRunning
+							s.PID = w.PID
+							s.Dir = w.Dir
+						}
 						break
 					}
 				}
@@ -207,4 +215,3 @@ func (r *Runner) cleanupDefaultWindow(session string) {
 		}
 	}
 }
-

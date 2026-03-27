@@ -107,7 +107,7 @@ func Run(configPath, groupName string) error {
 			}
 			tmuxClient.SendKeys(session, appName, "C-c")
 			time.Sleep(100 * time.Millisecond)
-			tmuxClient.SendKeys(session, appName, appCmd)
+			tmuxClient.SendKeys(session, appName, appCmd+"; exit $?")
 			log.Printf("restarted %s/%s", groupName, appName)
 		})
 		debouncers = append(debouncers, d)

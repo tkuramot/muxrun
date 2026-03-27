@@ -181,3 +181,33 @@ func TestStatus(t *testing.T) {
 		}
 	}
 }
+
+func TestStatus_ExitedApp(t *testing.T) {
+	mock := tmux.NewMockClient()
+	mock.Sessions["muxrun-backend"] = []tmux.Window{
+		{Name: "api", Dead: true, DeadStatus: 1},
+		{Name: "worker", Dead: true, DeadStatus: 0},
+	}
+	r := New(testConfig(), mock)
+
+	statuses, err := r.Status()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := map[string]int{"api": 1, "worker": 0}
+	for _, s := range statuses {
+		if s.Group != "backend" {
+			continue
+		}
+		if s.Status != StatusStopped {
+			t.Errorf("%s: expected stopped, got %s", s.App, s.Status)
+		}
+		if !s.Exited {
+			t.Errorf("%s: expected Exited=true", s.App)
+		}
+		if code, ok := expected[s.App]; ok && s.ExitStatus != code {
+			t.Errorf("%s: expected ExitStatus=%d, got %d", s.App, code, s.ExitStatus)
+		}
+	}
+}
