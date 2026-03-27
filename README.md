@@ -43,7 +43,7 @@ go install github.com/tkuramot/muxrun@latest
 ```toml
 [[group]]
 name = "myapp"
-dir = "~/projects/myapp"
+dir = "."
 
   [[group.app]]
   name = "server"
@@ -89,7 +89,7 @@ muxrun looks for a config file in the following order:
 ```toml
 [[group]]
 name = "backend"
-dir = "~/projects/myapp"
+dir = "."
 
   [[group.app]]
   name = "api"
@@ -101,7 +101,7 @@ dir = "~/projects/myapp"
 ```toml
 [[group]]
 name = "backend"
-dir = "~/projects/myapp"
+dir = "."
 
   [[group.app]]
   name = "api"
@@ -114,7 +114,7 @@ dir = "~/projects/myapp"
 
 [[group]]
 name = "frontend"
-dir = "~/projects/frontend"
+dir = "./frontend"
 
   [[group.app]]
   name = "dev"
@@ -154,9 +154,9 @@ muxrun down backend                 # Stop a specific group
 ```bash
 $ muxrun ps
 GROUP       APP       STATUS    PID      DIR
-backend     api       running   12345    ~/projects/myapp/cmd/api
-backend     worker    running   12346    ~/projects/myapp/cmd/worker
-frontend    dev       stopped   -        ~/projects/frontend
+backend     api       running   12345    /home/user/repo/cmd/api
+backend     worker    running   12346    /home/user/repo/cmd/worker
+frontend    dev       stopped   -        /home/user/repo/frontend
 ```
 
 ### `muxrun logs` — View pane output

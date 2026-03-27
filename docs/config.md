@@ -35,6 +35,20 @@ dir = "~/projects/frontend"
   cmd = "npm run dev"
 ```
 
+## Relative Paths and Git Worktrees
+
+When `dir` is a relative path, it is resolved relative to the `muxrun.toml` location (not the current working directory). Using relative paths makes the config portable across git worktrees — copy `muxrun.toml` into each worktree and it resolves correctly without modification.
+
+```toml
+[[group]]
+name = "backend"
+dir = "."         # resolved relative to muxrun.toml location
+
+  [[group.app]]
+  name = "api"
+  cmd = "go run main.go"
+```
+
 ## Field Definitions
 
 ### Group (`[[group]]`)
