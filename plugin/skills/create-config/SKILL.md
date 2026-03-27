@@ -1,3 +1,9 @@
+---
+name: create-config
+description: Generate a valid muxrun.toml configuration file for a project
+allowed-tools: Bash(muxrun *)
+---
+
 # create-config
 
 Generate a valid `muxrun.toml` configuration file by analyzing the project's directory structure and inferring how to run each service.
