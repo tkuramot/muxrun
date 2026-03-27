@@ -93,7 +93,7 @@ func (r *Runner) Up(opts UpOptions) error {
 				return fmt.Errorf("creating window for app %q: %w", app.Name, err)
 			}
 
-			if err := r.tmux.SendKeys(session, app.Name, app.Cmd+"; exit $?"); err != nil {
+			if err := r.tmux.SendKeys(session, app.Name, "("+app.Cmd+"); exit $?"); err != nil {
 				return fmt.Errorf("sending command for app %q: %w", app.Name, err)
 			}
 
