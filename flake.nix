@@ -14,7 +14,7 @@
       packages = forAllSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          version = "0.9.0";
+          version = "0.10.0";
         in
         {
           default = pkgs.buildGoModule {
