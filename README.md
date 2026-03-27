@@ -135,7 +135,6 @@ When `watch` is enabled, muxrun starts a background daemon that restarts the app
 muxrun up                           # Start all groups
 muxrun up backend                   # Start a specific group
 muxrun up backend frontend          # Start multiple groups
-muxrun up backend --dir ~/other     # Override working directory
 ```
 
 ### `muxrun down` — Stop applications

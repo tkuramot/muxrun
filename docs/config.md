@@ -65,13 +65,6 @@ dir = "~/projects/frontend"
 | `enabled` | bool | Yes | Enable/disable file watching |
 | `exclude` | string[] | No | Regex patterns to exclude from watching (default: empty) |
 
-## Directory Resolution
-
-The working directory for apps is resolved as follows:
-
-1. If `--dir <path>` is specified on the CLI, use that value (overrides config)
-2. Otherwise, use the group's `dir` field from config
-
 ## Exclude Patterns
 
 - Specified as regular expressions (Go `regexp` package syntax)

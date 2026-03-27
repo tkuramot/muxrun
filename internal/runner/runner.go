@@ -14,9 +14,8 @@ var (
 )
 
 type UpOptions struct {
-	GroupName   string
-	AppName     string
-	DirOverride string
+	GroupName string
+	AppName   string
 }
 
 type DownOptions struct {
@@ -74,11 +73,6 @@ func (r *Runner) Up(opts UpOptions) error {
 			return fmt.Errorf("creating session for group %q: %w", g.Name, err)
 		}
 
-		dir := g.Dir
-		if opts.DirOverride != "" {
-			dir = opts.DirOverride
-		}
-
 		for _, app := range apps {
 
 			// Check if already running
@@ -93,7 +87,7 @@ func (r *Runner) Up(opts UpOptions) error {
 				}
 			}
 
-			if err := r.tmux.NewWindow(session, app.Name, dir); err != nil {
+			if err := r.tmux.NewWindow(session, app.Name, g.Dir); err != nil {
 				return fmt.Errorf("creating window for app %q: %w", app.Name, err)
 			}
 

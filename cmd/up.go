@@ -15,12 +15,6 @@ func newUpCommand() *cli.Command {
 		Name:  "up",
 		Usage: "Start applications",
 		ArgsUsage: "[group...]",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:  "dir",
-				Usage: "Override execution directory",
-			},
-		},
 		BashComplete: completeGroupNames,
 		Action: func(c *cli.Context) error {
 			cfg, configPath, err := loadConfigWithPath(c)
@@ -37,17 +31,14 @@ func newUpCommand() *cli.Command {
 
 			args := c.Args().Slice()
 			if len(args) == 0 {
-				if err := r.Up(runner.UpOptions{
-					DirOverride: c.String("dir"),
-				}); err != nil {
+				if err := r.Up(runner.UpOptions{}); err != nil {
 					return err
 				}
 				return spawnDaemons(cfg, configPath, "")
 			}
 			for _, group := range args {
 				if err := r.Up(runner.UpOptions{
-					GroupName:   group,
-					DirOverride: c.String("dir"),
+					GroupName: group,
 				}); err != nil {
 					return err
 				}
