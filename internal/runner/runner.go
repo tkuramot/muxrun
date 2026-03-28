@@ -3,6 +3,7 @@ package runner
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/tkuramot/muxrun/internal/config"
 	"github.com/tkuramot/muxrun/internal/tmux"
@@ -31,6 +32,7 @@ type AppStatus struct {
 	Dir        string
 	Exited     bool
 	ExitStatus int
+	ExitedAt   time.Time
 }
 
 type Status string
@@ -186,6 +188,7 @@ func (r *Runner) Status() ([]AppStatus, error) {
 							s.Status = StatusStopped
 							s.Exited = true
 							s.ExitStatus = w.DeadStatus
+							s.ExitedAt = w.DeadTime
 						} else {
 							s.Status = StatusRunning
 							s.PID = w.PID

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/tkuramot/muxrun/internal/runner"
 	"github.com/tkuramot/muxrun/internal/tmux"
@@ -41,6 +42,9 @@ func newPsCommand() *cli.Command {
 				statusStr := string(s.Status)
 				if s.Exited {
 					statusStr = fmt.Sprintf("exited (%d)", s.ExitStatus)
+					if !s.ExitedAt.IsZero() {
+						statusStr += " " + formatAgo(s.ExitedAt)
+					}
 				}
 				rows = append(rows, ui.TableRow{
 					Group:  s.Group,
@@ -54,5 +58,19 @@ func newPsCommand() *cli.Command {
 			ui.PrintTable(os.Stdout, rows)
 			return nil
 		},
+	}
+}
+
+func formatAgo(t time.Time) string {
+	d := time.Since(t)
+	switch {
+	case d < time.Minute:
+		return fmt.Sprintf("%ds ago", int(d.Seconds()))
+	case d < time.Hour:
+		return fmt.Sprintf("%dm ago", int(d.Minutes()))
+	case d < 24*time.Hour:
+		return fmt.Sprintf("%dh ago", int(d.Hours()))
+	default:
+		return fmt.Sprintf("%dd ago", int(d.Hours()/24))
 	}
 }

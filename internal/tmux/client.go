@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const InitWindowName = "__muxrun_init__"
@@ -40,6 +41,7 @@ type Window struct {
 	Dir        string
 	Dead       bool
 	DeadStatus int
+	DeadTime   time.Time
 }
 
 type client struct {
@@ -119,7 +121,7 @@ func (c *client) KillWindow(session, window string) error {
 }
 
 func (c *client) ListWindows(session string) ([]Window, error) {
-	out, err := c.run("list-windows", "-t", session, "-F", "#{window_name} #{pane_pid} #{pane_current_path} #{pane_dead} #{pane_dead_status}")
+	out, err := c.run("list-windows", "-t", session, "-F", "#{window_name} #{pane_pid} #{pane_current_path} #{pane_dead} #{pane_dead_status} #{pane_dead_time}")
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +130,7 @@ func (c *client) ListWindows(session string) ([]Window, error) {
 	}
 	var windows []Window
 	for _, line := range strings.Split(out, "\n") {
-		parts := strings.SplitN(line, " ", 5)
+		parts := strings.SplitN(line, " ", 6)
 		if len(parts) < 2 {
 			continue
 		}
@@ -142,7 +144,13 @@ func (c *client) ListWindows(session string) ([]Window, error) {
 		if len(parts) >= 5 {
 			deadStatus, _ = strconv.Atoi(parts[4])
 		}
-		windows = append(windows, Window{Name: parts[0], PID: pid, Dir: dir, Dead: dead, DeadStatus: deadStatus})
+		var deadTime time.Time
+		if len(parts) >= 6 {
+			if ts, err := strconv.ParseInt(parts[5], 10, 64); err == nil && ts > 0 {
+				deadTime = time.Unix(ts, 0)
+			}
+		}
+		windows = append(windows, Window{Name: parts[0], PID: pid, Dir: dir, Dead: dead, DeadStatus: deadStatus, DeadTime: deadTime})
 	}
 	return windows, nil
 }
