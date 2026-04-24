@@ -43,6 +43,14 @@ claude plugin install muxrun@muxrun
 
 1. **Install muxrun:**
 
+Homebrew (macOS / Linux):
+
+```bash
+brew install --cask tkuramot/tap/muxrun
+```
+
+Or via `go install`:
+
 ```bash
 go install github.com/tkuramot/muxrun@latest
 ```

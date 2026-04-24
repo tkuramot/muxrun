@@ -20,11 +20,14 @@ Dev environment uses Nix flakes (`nix develop` or direnv).
 
 ## Release
 
-1. Update docs if affected by the changes
-2. Update `version` in `flake.nix` to the new version
-3. Commit the version bump
-4. Create a git tag (`git tag vX.Y.Z`)
-5. Push commits and tag (`git push origin main --tags`)
+Releases are driven by the `release` GitHub Actions workflow (`.github/workflows/release.yml`), which runs GoReleaser to build binaries and publish the Homebrew cask to `tkuramot/homebrew-tap`.
+
+Two ways to trigger it:
+
+- **Automatic (via tag push):** update docs + `version` in `flake.nix`, commit, then `git tag vX.Y.Z && git push origin main --tags`.
+- **Manual (via workflow_dispatch):** run the `release` workflow from the Actions tab with a `patch`/`minor`/`major` bump. The workflow runs `scripts/bump-version.sh`, pushes the version commit and tag, and GoReleaser takes over.
+
+The `HOMEBREW_TAP_GITHUB_TOKEN` secret must be set on the repo for the Homebrew cask publish step to succeed.
 
 ## Documentation
 
