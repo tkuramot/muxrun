@@ -1,0 +1,73 @@
+version: 2
+
+project_name: muxrun
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: muxrun
+    main: .
+    binary: muxrun
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X github.com/tkuramot/muxrun/cmd.version={{.Version}}
+
+archives:
+  - id: muxrun
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    files:
+      - README.md
+      - LICENSE*
+      - docs/**/*
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "Merge pull request"
+
+release:
+  github:
+    owner: tkuramot
+    name: muxrun
+  draft: false
+  prerelease: auto
+
+brews:
+  - name: muxrun
+    repository:
+      owner: tkuramot
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/tkuramot/muxrun"
+    description: "Launch and manage multiple applications in groups using tmux"
+    license: "MIT"
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    dependencies:
+      - name: tmux
+    test: |
+      system "#{bin}/muxrun", "--version"
+    install: |
+      bin.install "muxrun"
