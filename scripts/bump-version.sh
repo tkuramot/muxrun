@@ -51,8 +51,8 @@ if ! grep -q "version = \"$NEW\";" flake.nix; then
   exit 1
 fi
 
-git add flake.nix
-git commit -m "Bump version to $NEW"
-git tag "v$NEW"
+git add flake.nix >&2
+git commit -m "Bump version to $NEW" >&2
+git tag "v$NEW" >&2
 
 echo "$NEW"
