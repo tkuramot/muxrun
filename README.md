@@ -193,10 +193,14 @@ If you use [Claude Code](https://docs.anthropic.com/en/docs/claude-code), you ca
 
 **Install**
 
-```bash
-claude plugin marketplace add https://github.com/tkuramot/muxrun
-claude plugin install muxrun@muxrun
+Run these inside Claude Code:
+
 ```
+/plugin marketplace add tkuramot/muxrun
+/plugin install muxrun@muxrun
+```
+
+The first command registers this repo as a marketplace; the second installs the `muxrun` plugin from it. Update later with `/plugin marketplace update muxrun`.
 
 **Skills**
 
