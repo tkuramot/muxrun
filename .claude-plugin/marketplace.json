@@ -8,7 +8,7 @@
     {
       "name": "muxrun",
       "source": "./plugin",
-      "description": "Generate muxrun.toml configuration files interactively"
+      "description": "Skills for authoring, diagnosing, and operating muxrun"
     }
   ]
 }

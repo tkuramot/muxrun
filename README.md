@@ -8,39 +8,6 @@ muxrun keeps it simple — `muxrun up` to start everything, `muxrun ps` to see w
 
 ## Quick Start
 
-<details>
-<summary>For Claude Code Users</summary>
-
-If you use [Claude Code](https://docs.anthropic.com/en/docs/claude-code), you can install the muxrun plugin to automatically generate `muxrun.toml` from your project structure.
-
-**Install**
-
-```bash
-claude plugin marketplace add https://github.com/tkuramot/muxrun
-claude plugin install muxrun@muxrun
-```
-
-**Skills**
-
-| Skill | Description |
-|-------|-------------|
-| `/create-config` | Analyze your project structure and generate a tailored `muxrun.toml` |
-| `/debug-logs` | Fetch logs from a running app and analyze them for errors |
-
-**`/create-config`**
-
-1. Run `/create-config` in Claude Code
-2. The skill scans your project structure and generates a tailored `muxrun.toml`
-3. Start your apps with `muxrun up`
-
-**`/debug-logs`**
-
-1. Start your apps with `muxrun up`
-2. Run `/debug-logs` in Claude Code when you need to investigate an issue
-3. The skill discovers running apps via `muxrun ps`, fetches their logs, and analyzes them
-
-</details>
-
 1. **Install muxrun:**
 
 Homebrew (macOS / Linux):
@@ -219,6 +186,29 @@ cd ~/repo-worktree-B && muxrun up   # same session restarts in B
 ```
 
 Copying `muxrun.toml` on worktree creation can be automated with a `post-checkout` hook or a worktree management tool like [git-worktree-runner](https://github.com/coderabbitai/git-worktree-runner).
+
+## Claude Code Plugin
+
+If you use [Claude Code](https://docs.anthropic.com/en/docs/claude-code), you can install the muxrun plugin to author and operate `muxrun.toml` with skills.
+
+**Install**
+
+```bash
+claude plugin marketplace add https://github.com/tkuramot/muxrun
+claude plugin install muxrun@muxrun
+```
+
+**Skills**
+
+| Skill | Description |
+|-------|-------------|
+| `/muxrun-init` | Analyze your project structure and generate a tailored `muxrun.toml` |
+| `/muxrun-import-compose` | Convert an existing `docker-compose.yml` / `Procfile` into `muxrun.toml` |
+| `/muxrun-doctor` | Diagnose tmux/daemon/PID/config issues in the local environment |
+| `/muxrun-triage-failure` | Find failing apps via `muxrun ps`, fetch logs, and pinpoint the cause |
+| `/muxrun-tail` | Follow an app's logs and surface anomalies (panics, 5xx, restart loops) |
+| `/muxrun-perf` | Diagnose slow startup / restart storms / over-broad watch and tune `exclude` |
+| `/muxrun-bisect` | Drive `git bisect` for runtime regressions reproducible only with the dev stack up |
 
 ## Shell Completion
 

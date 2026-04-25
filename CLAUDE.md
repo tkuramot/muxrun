@@ -37,13 +37,13 @@ The `HOMEBREW_TAP_GITHUB_TOKEN` secret must be set on the repo for the Homebrew 
 ## Plugin
 
 - **`plugin/.claude-plugin/plugin.json`** — Plugin metadata (name, version).
-- **`plugin/skills/create-config/SKILL.md`** — Skill definition for `/create-config`.
-- **`plugin/skills/create-config/config.md`** — Symlink to `docs/config.md`; updating docs automatically updates the skill's reference.
+- **`plugin/skills/<name>/SKILL.md`** — Skill definitions. Current skills: `muxrun-init`, `muxrun-import-compose`, `muxrun-doctor`, `muxrun-triage-failure`, `muxrun-tail`, `muxrun-perf`, `muxrun-bisect`.
+- **`plugin/skills/muxrun-init/config.md`**, **`plugin/skills/muxrun-import-compose/config.md`** — Symlinks to `docs/config.md`; updating the docs auto-updates the skills' references.
 
 ### Updating the plugin
 
 1. Edit `plugin/skills/*/SKILL.md` for skill changes.
-2. `config.md` is a symlink to `docs/config.md` — update the docs side and it auto-reflects.
+2. The `config.md` symlinks track `docs/config.md` — edit the docs side.
 3. Bump `version` in `plugin/.claude-plugin/plugin.json` for behavioral changes.
 4. Update the plugin section in `README.md` if user-facing instructions change.
 
