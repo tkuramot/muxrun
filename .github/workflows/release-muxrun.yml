@@ -1,9 +1,6 @@
-name: release
+name: release-muxrun
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
     inputs:
       bump:
@@ -29,7 +26,6 @@ jobs:
           fetch-depth: 0
 
       - name: Bump flake.nix and create tag
-        if: github.event_name == 'workflow_dispatch'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

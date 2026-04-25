@@ -20,12 +20,11 @@ Dev environment uses Nix flakes (`nix develop` or direnv).
 
 ## Release
 
-Releases are driven by the `release` GitHub Actions workflow (`.github/workflows/release.yml`), which runs GoReleaser to build binaries and publish the Homebrew cask to `tkuramot/homebrew-tap`.
+Releases are driven by the `release-muxrun` GitHub Actions workflow (`.github/workflows/release-muxrun.yml`), which runs GoReleaser to build binaries and publish the Homebrew cask to `tkuramot/homebrew-tap`.
 
-Two ways to trigger it:
+The plugin/skills are released by the `release-muxrun-skills` workflow (`.github/workflows/release-muxrun-skills.yml`). It triggers on pushes to `main` that change `plugin/.claude-plugin/plugin.json`: if the `version` field there points to a not-yet-released version, the workflow tags `muxrun-skills-v<version>` and publishes a GitHub release with a tarball of `plugin/`. To cut a skills release, bump `version` in `plugin/.claude-plugin/plugin.json` and commit to `main` — no tag push needed.
 
-- **Automatic (via tag push):** update docs + `version` in `flake.nix`, commit, then `git tag vX.Y.Z && git push origin main --tags`.
-- **Manual (via workflow_dispatch):** run the `release` workflow from the Actions tab with a `patch`/`minor`/`major` bump. The workflow runs `scripts/bump-version.sh`, pushes the version commit and tag, and GoReleaser takes over.
+Trigger it from the Actions tab via `workflow_dispatch` with a `patch`/`minor`/`major` bump. The workflow runs `scripts/bump-version.sh`, pushes the version commit and tag, and GoReleaser takes over.
 
 The `HOMEBREW_TAP_GITHUB_TOKEN` secret must be set on the repo for the Homebrew cask publish step to succeed.
 
