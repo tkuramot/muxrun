@@ -1,18 +1,23 @@
 name: release-muxrun-skills
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "plugin/.claude-plugin/plugin.json"
   workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type"
+        required: true
+        type: choice
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  bump:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,37 +25,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Read plugin version
-        id: version
-        run: |
-          VERSION=$(jq -r .version plugin/.claude-plugin/plugin.json)
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=muxrun-skills-v$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Check if tag already exists
-        id: check
-        run: |
-          if git rev-parse "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Create archive
-        if: steps.check.outputs.exists == 'false'
-        run: |
-          tar -czf "muxrun-skills-${{ steps.version.outputs.version }}.tar.gz" -C plugin .
-
-      - name: Create tag and release
-        if: steps.check.outputs.exists == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Bump plugin.json version
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "${{ steps.version.outputs.tag }}"
-          git push origin "${{ steps.version.outputs.tag }}"
-          gh release create "${{ steps.version.outputs.tag }}" \
-            --title "muxrun-skills v${{ steps.version.outputs.version }}" \
-            --generate-notes \
-            "muxrun-skills-${{ steps.version.outputs.version }}.tar.gz"
+          FILE=plugin/.claude-plugin/plugin.json
+          CURRENT=$(jq -r .version "$FILE")
+          IFS=. read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          case "${{ inputs.bump }}" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+          NEW="${MAJOR}.${MINOR}.${PATCH}"
+          jq --arg v "$NEW" '.version = $v' "$FILE" > "$FILE.tmp"
+          mv "$FILE.tmp" "$FILE"
+          git add "$FILE"
+          git commit -m "Bump muxrun-skills version to $NEW"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
