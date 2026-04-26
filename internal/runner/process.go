@@ -2,6 +2,9 @@ package runner
 
 import (
 	"os"
+	"os/exec"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -40,6 +43,25 @@ func TerminateProcess(pid int) error {
 		<-done
 		return nil
 	}
+}
+
+// FirstChildPID returns the PID of the first direct child of the given parent.
+// Returns 0 if there are no children or the lookup fails — so a tmux pane shell
+// with no command running yet reports 0 instead of the shell PID itself.
+func FirstChildPID(ppid int) int {
+	if ppid <= 0 {
+		return 0
+	}
+	out, err := exec.Command("pgrep", "-P", strconv.Itoa(ppid)).Output()
+	if err != nil {
+		return 0
+	}
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		if pid, err := strconv.Atoi(strings.TrimSpace(line)); err == nil && pid > 0 {
+			return pid
+		}
+	}
+	return 0
 }
 
 // IsProcessRunning checks if a process with the given PID is alive.

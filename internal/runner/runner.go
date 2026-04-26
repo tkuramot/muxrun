@@ -191,7 +191,7 @@ func (r *Runner) Status() ([]AppStatus, error) {
 							s.ExitedAt = w.DeadTime
 						} else {
 							s.Status = StatusRunning
-							s.PID = w.PID
+							s.PID = FirstChildPID(w.PID)
 							s.Dir = w.Dir
 						}
 						break
