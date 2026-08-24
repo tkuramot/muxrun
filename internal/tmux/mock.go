@@ -80,10 +80,6 @@ func (m *MockClient) ListWindows(session string) ([]Window, error) {
 	return m.Sessions[session], nil
 }
 
-func (m *MockClient) SendKeys(session, window, keys string) error {
-	return nil
-}
-
 func (m *MockClient) GetPanePID(session, window string) (int, error) {
 	for _, w := range m.Sessions[session] {
 		if w.Name == window {

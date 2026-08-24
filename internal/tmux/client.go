@@ -27,7 +27,6 @@ type Client interface {
 	RespawnWindow(session, window, dir, cmd string) error
 	KillWindow(session, window string) error
 	ListWindows(session string) ([]Window, error)
-	SendKeys(session, window, keys string) error
 	GetPanePID(session, window string) (int, error)
 	CapturePane(session, window string) (string, error)
 	PipePane(session, window, cmd string) error
@@ -224,11 +223,6 @@ func parseWindowLine(line string) (Window, bool) {
 		w.Dir = parts[5]
 	}
 	return w, true
-}
-
-func (c *client) SendKeys(session, window, keys string) error {
-	_, err := c.run("send-keys", "-t", session+":"+window, keys, "Enter")
-	return err
 }
 
 func (c *client) GetPanePID(session, window string) (int, error) {

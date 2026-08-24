@@ -211,3 +211,20 @@ func TestStatus_ExitedApp(t *testing.T) {
 		}
 	}
 }
+
+func TestUp_RunsCommandInWindow(t *testing.T) {
+	mock := tmux.NewMockClient()
+	r := New(testConfig(), mock)
+
+	if err := r.Up(UpOptions{GroupName: "backend", AppName: "api"}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(mock.Respawns) != 1 {
+		t.Fatalf("expected 1 respawn, got %d", len(mock.Respawns))
+	}
+	expected := tmux.RespawnCall{Session: "muxrun-backend", Window: "api", Dir: "/tmp", Cmd: "echo api"}
+	if mock.Respawns[0] != expected {
+		t.Errorf("respawn = %+v, want %+v", mock.Respawns[0], expected)
+	}
+}

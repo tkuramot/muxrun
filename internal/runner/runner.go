@@ -95,8 +95,11 @@ func (r *Runner) Up(opts UpOptions) error {
 				return fmt.Errorf("creating window for app %q: %w", app.Name, err)
 			}
 
-			if err := r.tmux.SendKeys(session, app.Name, "("+app.Cmd+"); exit $?"); err != nil {
-				return fmt.Errorf("sending command for app %q: %w", app.Name, err)
+			// Respawn the window rather than typing into its shell: the
+			// command replaces the pane's shell, so pane_pid is the command's
+			// own PID and the pane exits with the command's status.
+			if err := r.tmux.RespawnWindow(session, app.Name, g.Dir, app.Cmd); err != nil {
+				return fmt.Errorf("starting app %q: %w", app.Name, err)
 			}
 
 			fmt.Printf("started %s/%s\n", g.Name, app.Name)
@@ -191,7 +194,7 @@ func (r *Runner) Status() ([]AppStatus, error) {
 							s.ExitedAt = w.DeadTime
 						} else {
 							s.Status = StatusRunning
-							s.PID = FirstChildPID(w.PID)
+							s.PID = w.PID
 							s.Dir = w.Dir
 						}
 						break

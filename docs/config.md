@@ -63,7 +63,7 @@ dir = "."         # resolved relative to muxrun.toml location
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | string | Yes | App name. Used as the tmux window name |
-| `cmd` | string | Yes | Command to execute |
+| `cmd` | string | Yes | Command to execute. Runs as the tmux pane's process via the tmux `default-shell` started as an interactive login shell, so shell startup files apply and `muxrun ps` reports the command's own PID |
 | `watch` | bool \| object | No | File watch config (default: `false`) |
 
 ### Watch Options
