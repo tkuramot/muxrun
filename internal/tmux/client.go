@@ -43,6 +43,7 @@ type Window struct {
 	Dir        string
 	Dead       bool
 	DeadStatus int
+	DeadSignal string
 	DeadTime   time.Time
 }
 
@@ -196,7 +197,11 @@ func (c *client) ListWindows(session string) ([]Window, error) {
 // tab-separated because pane_current_path (and window names) may contain
 // spaces, and the path is last so that a stray separator inside it cannot
 // shift the fields that decide whether a pane is dead.
-const windowFormat = "#{window_name}\t#{pane_pid}\t#{pane_dead}\t#{pane_dead_status}\t#{pane_dead_time}\t#{pane_current_path}"
+//
+// pane_dead_status is empty when the pane process was killed by a signal, so
+// pane_dead_signal is what tells a signalled pane apart from a clean exit 0.
+// It only exists in tmux 3.4+; older versions expand it to an empty field.
+const windowFormat = "#{window_name}\t#{pane_pid}\t#{pane_dead}\t#{pane_dead_status}\t#{pane_dead_signal}\t#{pane_dead_time}\t#{pane_current_path}"
 
 // parseWindowLine parses a single windowFormat line. Trailing fields are
 // optional: a tmux that does not know one of the format variables expands it
@@ -215,12 +220,15 @@ func parseWindowLine(line string) (Window, bool) {
 		w.DeadStatus, _ = strconv.Atoi(parts[3])
 	}
 	if len(parts) >= 5 {
-		if ts, err := strconv.ParseInt(parts[4], 10, 64); err == nil && ts > 0 {
+		w.DeadSignal = parts[4]
+	}
+	if len(parts) >= 6 {
+		if ts, err := strconv.ParseInt(parts[5], 10, 64); err == nil && ts > 0 {
 			w.DeadTime = time.Unix(ts, 0)
 		}
 	}
-	if len(parts) >= 6 {
-		w.Dir = parts[5]
+	if len(parts) >= 7 {
+		w.Dir = parts[6]
 	}
 	return w, true
 }

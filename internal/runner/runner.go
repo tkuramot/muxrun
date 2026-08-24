@@ -32,6 +32,7 @@ type AppStatus struct {
 	Dir        string
 	Exited     bool
 	ExitStatus int
+	ExitSignal string
 	ExitedAt   time.Time
 }
 
@@ -191,6 +192,7 @@ func (r *Runner) Status() ([]AppStatus, error) {
 							s.Status = StatusStopped
 							s.Exited = true
 							s.ExitStatus = w.DeadStatus
+							s.ExitSignal = w.DeadSignal
 							s.ExitedAt = w.DeadTime
 						} else {
 							s.Status = StatusRunning

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/tkuramot/muxrun/internal/runner"
@@ -41,7 +42,7 @@ func newPsCommand() *cli.Command {
 				}
 				statusStr := string(s.Status)
 				if s.Exited {
-					statusStr = fmt.Sprintf("exited (%d)", s.ExitStatus)
+					statusStr = "exited (" + formatExitReason(s) + ")"
 					if !s.ExitedAt.IsZero() {
 						statusStr += " " + formatAgo(s.ExitedAt)
 					}
@@ -59,6 +60,16 @@ func newPsCommand() *cli.Command {
 			return nil
 		},
 	}
+}
+
+// formatExitReason describes why a pane died. tmux leaves the exit status
+// empty for a pane killed by a signal, so the signal name is the only
+// truthful thing to report there.
+func formatExitReason(s runner.AppStatus) string {
+	if s.ExitSignal != "" {
+		return "SIG" + strings.ToUpper(s.ExitSignal)
+	}
+	return strconv.Itoa(s.ExitStatus)
 }
 
 func formatAgo(t time.Time) string {
