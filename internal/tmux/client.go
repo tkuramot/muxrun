@@ -121,7 +121,7 @@ func (c *client) KillWindow(session, window string) error {
 }
 
 func (c *client) ListWindows(session string) ([]Window, error) {
-	out, err := c.run("list-windows", "-t", session, "-F", "#{window_name} #{pane_pid} #{pane_current_path} #{pane_dead} #{pane_dead_status} #{pane_dead_time}")
+	out, err := c.run("list-windows", "-t", session, "-F", windowFormat)
 	if err != nil {
 		return nil, err
 	}
@@ -130,29 +130,44 @@ func (c *client) ListWindows(session string) ([]Window, error) {
 	}
 	var windows []Window
 	for _, line := range strings.Split(out, "\n") {
-		parts := strings.SplitN(line, " ", 6)
-		if len(parts) < 2 {
-			continue
+		if w, ok := parseWindowLine(line); ok {
+			windows = append(windows, w)
 		}
-		pid, _ := strconv.Atoi(parts[1])
-		dir := ""
-		if len(parts) >= 3 {
-			dir = parts[2]
-		}
-		dead := len(parts) >= 4 && parts[3] == "1"
-		deadStatus := 0
-		if len(parts) >= 5 {
-			deadStatus, _ = strconv.Atoi(parts[4])
-		}
-		var deadTime time.Time
-		if len(parts) >= 6 {
-			if ts, err := strconv.ParseInt(parts[5], 10, 64); err == nil && ts > 0 {
-				deadTime = time.Unix(ts, 0)
-			}
-		}
-		windows = append(windows, Window{Name: parts[0], PID: pid, Dir: dir, Dead: dead, DeadStatus: deadStatus, DeadTime: deadTime})
 	}
 	return windows, nil
+}
+
+// windowFormat is the list-windows format used by ListWindows. Fields are
+// tab-separated because pane_current_path (and window names) may contain
+// spaces, and the path is last so that a stray separator inside it cannot
+// shift the fields that decide whether a pane is dead.
+const windowFormat = "#{window_name}\t#{pane_pid}\t#{pane_dead}\t#{pane_dead_status}\t#{pane_dead_time}\t#{pane_current_path}"
+
+// parseWindowLine parses a single windowFormat line. Trailing fields are
+// optional: a tmux that does not know one of the format variables expands it
+// to an empty string, which run() may then trim away.
+func parseWindowLine(line string) (Window, bool) {
+	parts := strings.Split(line, "\t")
+	if len(parts) < 2 {
+		return Window{}, false
+	}
+	w := Window{Name: parts[0]}
+	w.PID, _ = strconv.Atoi(parts[1])
+	if len(parts) >= 3 {
+		w.Dead = parts[2] == "1"
+	}
+	if len(parts) >= 4 {
+		w.DeadStatus, _ = strconv.Atoi(parts[3])
+	}
+	if len(parts) >= 5 {
+		if ts, err := strconv.ParseInt(parts[4], 10, 64); err == nil && ts > 0 {
+			w.DeadTime = time.Unix(ts, 0)
+		}
+	}
+	if len(parts) >= 6 {
+		w.Dir = parts[5]
+	}
+	return w, true
 }
 
 func (c *client) SendKeys(session, window, keys string) error {
