@@ -42,15 +42,12 @@ type rawGroup struct {
 	Apps []rawApp `toml:"app"`
 }
 
-type rawWatchConfig struct {
-	Enabled bool     `toml:"enabled"`
-	Exclude []string `toml:"exclude"`
-}
-
 type rawApp struct {
-	Name  string         `toml:"name"`
-	Cmd   string         `toml:"cmd"`
-	Watch rawWatchConfig `toml:"watch"`
+	Name string `toml:"name"`
+	Cmd  string `toml:"cmd"`
+	// watch is documented in both a shorthand and a table form, so it is
+	// decoded loosely and converted by parseWatch.
+	Watch any `toml:"watch"`
 }
 
 const configFileName = "muxrun.toml"
@@ -131,18 +128,59 @@ func convertRawConfig(raw *rawConfig, configDir string) (*Config, error) {
 		}
 		g := Group{Name: rg.Name, Dir: dir}
 		for _, ra := range rg.Apps {
+			watch, err := parseWatch(ra.Watch, rg.Name, ra.Name)
+			if err != nil {
+				return nil, err
+			}
 			g.Apps = append(g.Apps, App{
-				Name: ra.Name,
-				Cmd:  ra.Cmd,
-				Watch: WatchConfig{
-					Enabled: ra.Watch.Enabled,
-					Exclude: ra.Watch.Exclude,
-				},
+				Name:  ra.Name,
+				Cmd:   ra.Cmd,
+				Watch: watch,
 			})
 		}
 		cfg.Groups = append(cfg.Groups, g)
 	}
 	return cfg, nil
+}
+
+// parseWatch converts the watch field, which may be either the shorthand
+// `watch = false` or a table `watch = { enabled = true, exclude = [...] }`.
+func parseWatch(v any, group, app string) (WatchConfig, error) {
+	switch w := v.(type) {
+	case nil:
+		return WatchConfig{}, nil
+	case bool:
+		return WatchConfig{Enabled: w}, nil
+	case map[string]any:
+		cfg := WatchConfig{}
+		if enabled, ok := w["enabled"]; ok {
+			b, ok := enabled.(bool)
+			if !ok {
+				return WatchConfig{}, watchFieldError(group, app, "watch.enabled must be a boolean")
+			}
+			cfg.Enabled = b
+		}
+		if exclude, ok := w["exclude"]; ok {
+			items, ok := exclude.([]any)
+			if !ok {
+				return WatchConfig{}, watchFieldError(group, app, "watch.exclude must be an array of strings")
+			}
+			for _, item := range items {
+				pattern, ok := item.(string)
+				if !ok {
+					return WatchConfig{}, watchFieldError(group, app, "watch.exclude must be an array of strings")
+				}
+				cfg.Exclude = append(cfg.Exclude, pattern)
+			}
+		}
+		return cfg, nil
+	default:
+		return WatchConfig{}, watchFieldError(group, app, "watch must be a boolean or a table")
+	}
+}
+
+func watchFieldError(group, app, msg string) error {
+	return fmt.Errorf("%w: %s for app %q in group %q", ErrConfigValidation, msg, app, group)
 }
 
 func expandPath(path string) (string, error) {

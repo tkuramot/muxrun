@@ -5,7 +5,13 @@ dir = "/tmp/test"
   [[group.app]]
   name = "app1"
   cmd = "echo hello"
+  watch = false
 
   [[group.app]]
   name = "app2"
   cmd = "echo world"
+  watch = true
+
+  [[group.app]]
+  name = "app3"
+  cmd = "echo omitted"

@@ -46,17 +46,31 @@ func TestLoad_ValidConfig(t *testing.T) {
 	}
 }
 
-func TestLoad_WatchOmitted(t *testing.T) {
+func TestLoad_WatchBool(t *testing.T) {
 	cfg, err := Load("../../testdata/watch_bool.toml")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if cfg.Groups[0].Apps[0].Watch.Enabled {
-		t.Error("expected watch to be disabled when omitted for app1")
+	apps := cfg.Groups[0].Apps
+	if apps[0].Watch.Enabled {
+		t.Error("expected watch to be disabled for watch = false")
 	}
-	if cfg.Groups[0].Apps[1].Watch.Enabled {
-		t.Error("expected watch to be disabled when omitted for app2")
+	if !apps[1].Watch.Enabled {
+		t.Error("expected watch to be enabled for watch = true")
+	}
+	if apps[2].Watch.Enabled {
+		t.Error("expected watch to be disabled when omitted")
+	}
+}
+
+func TestLoad_WatchInvalidType(t *testing.T) {
+	_, err := Load("../../testdata/watch_invalid.toml")
+	if err == nil {
+		t.Fatal("expected error for a watch field that is neither bool nor table")
+	}
+	if !errors.Is(err, ErrConfigValidation) {
+		t.Errorf("expected ErrConfigValidation, got %v", err)
 	}
 }
 

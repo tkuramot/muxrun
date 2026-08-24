@@ -1,0 +1,8 @@
+[[group]]
+name = "test"
+dir = "/tmp/test"
+
+  [[group.app]]
+  name = "app1"
+  cmd = "echo hello"
+  watch = 3
