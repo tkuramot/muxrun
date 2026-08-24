@@ -82,6 +82,7 @@ func Run(configPath, groupName string) error {
 	}
 
 	session := tmux.SessionName(groupName)
+	sup := newSupervisor(tmuxClient, session, groupName, group.Dir, group.Apps)
 
 	var watchers []*watcher.Watcher
 	var debouncers []*watcher.Debouncer
@@ -108,7 +109,7 @@ func Run(configPath, groupName string) error {
 			// respawn-window kills the running process and starts the command
 			// again in one step. It also revives a pane that remain-on-exit
 			// left dead, which send-keys silently fails to do.
-			if err := tmuxClient.RespawnWindow(session, appName, group.Dir, appCmd); err != nil {
+			if err := sup.restartOnChange(appName, appCmd); err != nil {
 				log.Printf("failed to restart %s/%s: %v", groupName, appName, err)
 				return
 			}
@@ -125,9 +126,15 @@ func Run(configPath, groupName string) error {
 		log.Printf("watching %s/%s (dir: %s)", groupName, appName, group.Dir)
 	}
 
-	if len(watchers) == 0 {
-		log.Printf("no watch-enabled apps found for group %s, exiting", groupName)
+	if len(watchers) == 0 && !sup.enabled() {
+		log.Printf("no watch- or restart-enabled apps found for group %s, exiting", groupName)
 		return nil
+	}
+
+	stop := make(chan struct{})
+	if sup.enabled() {
+		go sup.run(stop)
+		log.Printf("supervising restart-on-failure apps for group %s", groupName)
 	}
 
 	// Wait for signal
@@ -137,6 +144,7 @@ func Run(configPath, groupName string) error {
 
 	log.Printf("shutting down daemon for group %s", groupName)
 
+	close(stop)
 	for _, d := range debouncers {
 		d.Stop()
 	}

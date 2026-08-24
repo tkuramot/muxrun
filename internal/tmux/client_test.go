@@ -66,27 +66,33 @@ func TestParseWindowLine(t *testing.T) {
 	}{
 		{
 			name:     "running window",
-			line:     "api\t123\t0\t0\t\t0\t/tmp/app",
+			line:     "api\t123\t0\t0\t\t0\t\t\t/tmp/app",
 			ok:       true,
 			expected: Window{Name: "api", PID: 123, Dir: "/tmp/app"},
 		},
 		{
 			name:     "dead window",
-			line:     "api\t123\t1\t7\t\t1700000000\t/tmp/app",
+			line:     "api\t123\t1\t7\t\t1700000000\t\t\t/tmp/app",
 			ok:       true,
 			expected: Window{Name: "api", PID: 123, Dead: true, DeadStatus: 7, DeadTime: time.Unix(1700000000, 0), Dir: "/tmp/app"},
 		},
 		{
 			name:     "signalled window has no exit status",
-			line:     "api\t123\t1\t\tint\t1700000000\t/tmp/app",
+			line:     "api\t123\t1\t\tint\t1700000000\t\t\t/tmp/app",
 			ok:       true,
 			expected: Window{Name: "api", PID: 123, Dead: true, DeadSignal: "int", DeadTime: time.Unix(1700000000, 0), Dir: "/tmp/app"},
 		},
 		{
 			name:     "path containing spaces",
-			line:     "api\t123\t1\t7\t\t1700000000\t/tmp/my project dir",
+			line:     "api\t123\t1\t7\t\t1700000000\t\t\t/tmp/my project dir",
 			ok:       true,
 			expected: Window{Name: "api", PID: 123, Dead: true, DeadStatus: 7, DeadTime: time.Unix(1700000000, 0), Dir: "/tmp/my project dir"},
+		},
+		{
+			name:     "window muxrun has restarted",
+			line:     "api\t123\t1\t1\t\t1700000000\t5\tfailed\t/tmp/app",
+			ok:       true,
+			expected: Window{Name: "api", PID: 123, Dead: true, DeadStatus: 1, DeadTime: time.Unix(1700000000, 0), Restarts: 5, RestartFailed: true, Dir: "/tmp/app"},
 		},
 		{
 			name:     "missing trailing fields",

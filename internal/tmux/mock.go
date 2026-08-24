@@ -1,5 +1,7 @@
 package tmux
 
+import "strconv"
+
 // MockClient is a test double for tmux.Client.
 type MockClient struct {
 	Sessions          map[string][]Window
@@ -49,6 +51,23 @@ func (m *MockClient) ListSessions() ([]Session, error) {
 
 func (m *MockClient) NewWindow(session, window, dir string) error {
 	m.Sessions[session] = append(m.Sessions[session], Window{Name: window})
+	return nil
+}
+
+func (m *MockClient) SetWindowOption(session, window, option, value string) error {
+	windows := m.Sessions[session]
+	for i, w := range windows {
+		if w.Name != window {
+			continue
+		}
+		switch option {
+		case RestartsOption:
+			windows[i].Restarts, _ = strconv.Atoi(value)
+		case RestartStateOption:
+			windows[i].RestartFailed = value == RestartStateFailed
+		}
+		return nil
+	}
 	return nil
 }
 

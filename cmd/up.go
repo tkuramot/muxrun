@@ -54,14 +54,14 @@ func newUpCommand() *cli.Command {
 func spawnDaemons(cfg *config.Config, configPath, groupName string) error {
 	groups := cfg.FindGroups(groupName)
 	for _, g := range groups {
-		hasWatch := false
+		needsDaemon := false
 		for _, app := range g.Apps {
-			if app.Watch.Enabled {
-				hasWatch = true
+			if app.Watch.Enabled || app.Restart == config.RestartOnFailure {
+				needsDaemon = true
 				break
 			}
 		}
-		if !hasWatch {
+		if !needsDaemon {
 			continue
 		}
 
@@ -73,7 +73,7 @@ func spawnDaemons(cfg *config.Config, configPath, groupName string) error {
 			fmt.Printf("warning: failed to start daemon for group %s: %v\n", g.Name, err)
 			continue
 		}
-		fmt.Printf("started file watcher daemon for group %s\n", g.Name)
+		fmt.Printf("started daemon for group %s\n", g.Name)
 	}
 	return nil
 }
