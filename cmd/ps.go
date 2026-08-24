@@ -40,17 +40,10 @@ func newPsCommand() *cli.Command {
 				if s.PID > 0 {
 					pid = strconv.Itoa(s.PID)
 				}
-				statusStr := string(s.Status)
-				if s.Exited {
-					statusStr = "exited (" + formatExitReason(s) + ")"
-					if !s.ExitedAt.IsZero() {
-						statusStr += " " + formatAgo(s.ExitedAt)
-					}
-				}
 				rows = append(rows, ui.TableRow{
 					Group:  s.Group,
 					App:    s.App,
-					Status: statusStr,
+					Status: formatStatus(s),
 					PID:    pid,
 					Dir:    s.Dir,
 				})
@@ -60,6 +53,34 @@ func newPsCommand() *cli.Command {
 			return nil
 		},
 	}
+}
+
+// formatStatus renders the app's state, how it exited, and how often the
+// daemon has restarted it, e.g. "failed (1) 3s ago (5 restarts)".
+func formatStatus(s runner.AppStatus) string {
+	status := string(s.Status)
+	if s.Exited {
+		status = "exited"
+		if s.RestartFailed {
+			// The daemon has run out of retries and stopped trying.
+			status = "failed"
+		}
+		status += " (" + formatExitReason(s) + ")"
+		if !s.ExitedAt.IsZero() {
+			status += " " + formatAgo(s.ExitedAt)
+		}
+	}
+	if s.Restarts > 0 {
+		status += fmt.Sprintf(" (%d %s)", s.Restarts, pluralize(s.Restarts, "restart"))
+	}
+	return status
+}
+
+func pluralize(n int, word string) string {
+	if n == 1 {
+		return word
+	}
+	return word + "s"
 }
 
 // formatExitReason describes why a pane died. tmux leaves the exit status

@@ -212,6 +212,33 @@ func TestStatus_ExitedApp(t *testing.T) {
 	}
 }
 
+func TestStatus_RestartedApp(t *testing.T) {
+	mock := tmux.NewMockClient()
+	mock.Sessions["muxrun-backend"] = []tmux.Window{
+		{Name: "api", Dead: true, DeadStatus: 1, Restarts: 5, RestartFailed: true},
+		{Name: "worker", PID: 42, Restarts: 2},
+	}
+	r := New(testConfig(), mock)
+
+	statuses, err := r.Status()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	for _, s := range statuses {
+		switch {
+		case s.App == "api":
+			if s.Restarts != 5 || !s.RestartFailed {
+				t.Errorf("api: expected 5 restarts and a failed mark, got %d/%v", s.Restarts, s.RestartFailed)
+			}
+		case s.App == "worker":
+			if s.Restarts != 2 || s.RestartFailed {
+				t.Errorf("worker: expected 2 restarts and no failed mark, got %d/%v", s.Restarts, s.RestartFailed)
+			}
+		}
+	}
+}
+
 func TestUp_RunsCommandInWindow(t *testing.T) {
 	mock := tmux.NewMockClient()
 	r := New(testConfig(), mock)

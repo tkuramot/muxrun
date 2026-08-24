@@ -34,6 +34,10 @@ type AppStatus struct {
 	ExitStatus int
 	ExitSignal string
 	ExitedAt   time.Time
+	// Restarts counts the failures the daemon restarted the app after, and
+	// RestartFailed reports that it has given up on it.
+	Restarts      int
+	RestartFailed bool
 }
 
 type Status string
@@ -188,6 +192,8 @@ func (r *Runner) Status() ([]AppStatus, error) {
 			if exists {
 				for _, w := range windows {
 					if w.Name == app.Name {
+						s.Restarts = w.Restarts
+						s.RestartFailed = w.RestartFailed
 						if w.Dead {
 							s.Status = StatusStopped
 							s.Exited = true
