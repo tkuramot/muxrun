@@ -12,33 +12,22 @@ import (
 )
 
 const (
-	// pollInterval is how often dead panes are looked for. tmux has no way to
-	// push pane deaths to us, so one list-windows per group per tick is the
-	// cost of noticing a crash within a second.
 	pollInterval = time.Second
 	baseBackoff  = time.Second
 	maxBackoff   = 30 * time.Second
 	maxRetries   = 5
-	// healthyAfter is how long a restarted app has to stay up before the
-	// failure it recovered from stops counting against its retry budget.
+	// How long an app has to stay up before its failures stop counting.
 	healthyAfter = 10 * time.Second
 )
 
-// stopSignals are the signals muxrun reads as "someone stopped this on
-// purpose" — a Ctrl-C in the pane, or a kill from the user's own script.
-// Panes are interactive, so restarting after one of these would fight the
-// user. SIGKILL is not in the list: it is more often an OOM kill than a
-// deliberate stop. tmux reports signal names lowercase and without the SIG
-// prefix.
+// Signals muxrun reads as a deliberate stop, so restarting would fight the
+// user. SIGKILL is excluded: it is more often an OOM kill. tmux reports signal
+// names lowercase and without the SIG prefix.
 var stopSignals = map[string]bool{"int": true, "term": true, "hup": true, "quit": true}
 
 type appState struct {
-	// failures counts consecutive failures, and is what the retry budget and
-	// the backoff are computed from.
-	failures int
-	// restarts counts every restart since the window was created, and is what
-	// muxrun ps reports.
-	restarts      int
+	failures      int // consecutive; drives the retry budget and the backoff
+	restarts      int // every restart since the window was created
 	startedAt     time.Time
 	nextAttemptAt time.Time
 	gaveUp        bool
@@ -53,8 +42,6 @@ const (
 	actionHealthy
 )
 
-// decide reports what the supervisor should do about one window. It is pure so
-// the policy can be tested without a tmux server.
 func decide(now time.Time, w tmux.Window, st appState) action {
 	if !w.Dead {
 		if st.failures > 0 && !st.startedAt.IsZero() && now.Sub(st.startedAt) >= healthyAfter {
@@ -74,9 +61,8 @@ func decide(now time.Time, w tmux.Window, st appState) action {
 	return actionRestart
 }
 
-// isFailure reports whether a dead pane died in a way worth restarting.
-// A tmux older than 3.4 reports no signal, which leaves a signalled pane
-// looking like a clean exit — the quiet direction to be wrong in.
+// A tmux older than 3.4 reports no signal, leaving a signalled pane looking
+// like a clean exit — the quiet direction to be wrong in.
 func isFailure(w tmux.Window) bool {
 	if w.DeadSignal != "" {
 		return !stopSignals[w.DeadSignal]
@@ -92,9 +78,8 @@ func backoff(failures int) time.Duration {
 	return d
 }
 
-// supervisor restarts apps configured with restart = "on-failure". It also
-// owns the watch daemon's restarts, so a file-change restart and a failure
-// restart can never interleave on the same window.
+// supervisor restarts apps configured with restart = "on-failure". It also owns
+// the watch daemon's restarts, so the two can never interleave on one window.
 type supervisor struct {
 	tmux    tmux.Client
 	session string
@@ -125,15 +110,12 @@ func newSupervisor(c tmux.Client, session, group, dir string, apps []config.App)
 	return s
 }
 
-// enabled reports whether any app in the group asks to be restarted on
-// failure, and so whether the polling loop is worth running.
 func (s *supervisor) enabled() bool {
 	return len(s.apps) > 0
 }
 
-// restartOnChange restarts an app because its files changed. The app gets a
-// fresh retry budget: the code it failed with is not the code it is about to
-// run.
+// restartOnChange restarts an app because its files changed, with a fresh retry
+// budget: the code it failed with is not the code it is about to run.
 func (s *supervisor) restartOnChange(app, cmd string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -168,7 +150,7 @@ func (s *supervisor) run(stop <-chan struct{}) {
 func (s *supervisor) tick(now time.Time) {
 	windows, err := s.tmux.ListWindows(s.session)
 	if err != nil {
-		return // the session is gone or tmux is busy; try again next tick
+		return // try again next tick
 	}
 
 	s.mu.Lock()
@@ -207,8 +189,7 @@ func (s *supervisor) tick(now time.Time) {
 	}
 }
 
-// setOption records bookkeeping on the window. It is best-effort: losing it
-// only costs muxrun ps some detail.
+// setOption is best-effort: losing it only costs muxrun ps some detail.
 func (s *supervisor) setOption(app, option, value string) {
 	if err := s.tmux.SetWindowOption(s.session, app, option, value); err != nil {
 		log.Printf("failed to set %s on %s/%s: %v", option, s.group, app, err)

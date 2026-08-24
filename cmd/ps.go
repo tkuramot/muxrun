@@ -55,14 +55,12 @@ func newPsCommand() *cli.Command {
 	}
 }
 
-// formatStatus renders the app's state, how it exited, and how often the
-// daemon has restarted it, e.g. "failed (1) 3s ago (5 restarts)".
+// formatStatus renders e.g. "failed (1) 3s ago (5 restarts)".
 func formatStatus(s runner.AppStatus) string {
 	status := string(s.Status)
 	if s.Exited {
 		status = "exited"
 		if s.RestartFailed {
-			// The daemon has run out of retries and stopped trying.
 			status = "failed"
 		}
 		status += " (" + formatExitReason(s) + ")"

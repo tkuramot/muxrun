@@ -113,7 +113,6 @@ func newTestSupervisor(t *testing.T, windows ...tmux.Window) (*supervisor, *tmux
 	return newSupervisor(m, "muxrun-test", "test", "/tmp/test", apps), m
 }
 
-// kill marks the window dead, the way a crashed app leaves it.
 func kill(m *tmux.MockClient, window string, status int) {
 	windows := m.Sessions["muxrun-test"]
 	for i, w := range windows {
@@ -153,7 +152,6 @@ func TestSupervisorTick_IgnoresAppsWithoutPolicy(t *testing.T) {
 func TestSupervisorTick_GivesUpAfterMaxRetries(t *testing.T) {
 	sup, m := newTestSupervisor(t, tmux.Window{Name: "api", Dead: true, DeadStatus: 1})
 
-	// Each attempt dies immediately, so the app never earns its budget back.
 	now := time.Unix(1700000000, 0)
 	for i := 0; i < maxRetries+1; i++ {
 		sup.tick(now)
@@ -202,7 +200,6 @@ func TestSupervisorRestartOnChange_ResetsBudget(t *testing.T) {
 		t.Error("expected the failed mark to be cleared from the window")
 	}
 
-	// The app is alive again, so a later failure gets the full budget.
 	kill(m, "api", 1)
 	sup.tick(time.Unix(1700000000, 0))
 	if len(m.Respawns) != 2 {

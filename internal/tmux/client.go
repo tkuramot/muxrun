@@ -50,8 +50,8 @@ type Window struct {
 	RestartFailed bool
 }
 
-// Window options muxrun sets on the windows it owns. They live and die with
-// the window, so `muxrun up` — which recreates the window — resets them.
+// Window options muxrun sets on its own windows. They die with the window, so
+// `muxrun up` resets them.
 const (
 	RestartsOption     = "@muxrun_restarts"
 	RestartStateOption = "@muxrun_restart_state"
@@ -130,8 +130,7 @@ func (c *client) NewWindow(session, window, dir string) error {
 	return err
 }
 
-// SetWindowOption sets a window option, used for muxrun's own @-prefixed
-// bookkeeping. An empty value clears the option.
+// SetWindowOption sets a window option. An empty value clears it.
 func (c *client) SetWindowOption(session, window, option, value string) error {
 	if value == "" {
 		_, err := c.run("set-option", "-w", "-t", session+":"+window, "-u", option)
@@ -223,7 +222,7 @@ func (c *client) ListWindows(session string) ([]Window, error) {
 // pane_dead_status is empty when the pane process was killed by a signal, so
 // pane_dead_signal is what tells a signalled pane apart from a clean exit 0.
 // It only exists in tmux 3.4+; older versions expand it to an empty field, as
-// they do for the @muxrun options on a window muxrun has not written to yet.
+// they do for an unset @muxrun option.
 const windowFormat = "#{window_name}\t#{pane_pid}\t#{pane_dead}\t#{pane_dead_status}\t#{pane_dead_signal}\t#{pane_dead_time}\t#{" + RestartsOption + "}\t#{" + RestartStateOption + "}\t#{pane_current_path}"
 
 // parseWindowLine parses a single windowFormat line. Trailing fields are

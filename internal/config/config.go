@@ -27,15 +27,10 @@ type App struct {
 	Restart RestartPolicy
 }
 
-// RestartPolicy decides whether the watch daemon brings an app back after it
-// exits on its own.
 type RestartPolicy string
 
 const (
-	// RestartNo leaves an exited app alone. It is the default.
-	RestartNo RestartPolicy = "no"
-	// RestartOnFailure restarts an app that exited non-zero or died on a
-	// signal it did not get from the user.
+	RestartNo        RestartPolicy = "no"
 	RestartOnFailure RestartPolicy = "on-failure"
 )
 

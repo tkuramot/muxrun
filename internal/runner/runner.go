@@ -25,17 +25,15 @@ type DownOptions struct {
 }
 
 type AppStatus struct {
-	Group      string
-	App        string
-	Status     Status
-	PID        int
-	Dir        string
-	Exited     bool
-	ExitStatus int
-	ExitSignal string
-	ExitedAt   time.Time
-	// Restarts counts the failures the daemon restarted the app after, and
-	// RestartFailed reports that it has given up on it.
+	Group         string
+	App           string
+	Status        Status
+	PID           int
+	Dir           string
+	Exited        bool
+	ExitStatus    int
+	ExitSignal    string
+	ExitedAt      time.Time
 	Restarts      int
 	RestartFailed bool
 }

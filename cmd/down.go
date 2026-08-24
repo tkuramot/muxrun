@@ -27,8 +27,7 @@ func newDownCommand() *cli.Command {
 
 			r := runner.New(cfg, tmuxClient)
 
-			// Daemons go first: one supervising restart = "on-failure" apps
-			// would otherwise be free to respawn a window on its way out.
+			// Stop daemons first so they cannot respawn a window on the way out.
 			args := c.Args().Slice()
 			if len(args) == 0 {
 				for _, g := range cfg.Groups {
