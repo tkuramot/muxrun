@@ -56,6 +56,22 @@ func TestValidate_InvalidGroupName(t *testing.T) {
 	}
 }
 
+func TestValidate_InvalidRestart(t *testing.T) {
+	cfg, err := Load("../../testdata/restart.toml")
+	if err != nil {
+		t.Fatalf("failed to load: %v", err)
+	}
+	if err := Validate(cfg); err != nil {
+		t.Fatalf("unexpected validation error: %v", err)
+	}
+
+	cfg.Groups[0].Apps[0].Restart = "always"
+	err = Validate(cfg)
+	if !errors.Is(err, ErrConfigValidation) {
+		t.Errorf("expected ErrConfigValidation, got %v", err)
+	}
+}
+
 func TestValidate_MissingCmd(t *testing.T) {
 	cfg, err := Load("../../testdata/missing_required.toml")
 	if err != nil {

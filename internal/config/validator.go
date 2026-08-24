@@ -50,6 +50,12 @@ func Validate(cfg *Config) error {
 				return fmt.Errorf("%w: cmd is required for app %q in group %q", ErrConfigValidation, a.Name, g.Name)
 			}
 
+			switch a.Restart {
+			case RestartNo, RestartOnFailure:
+			default:
+				return fmt.Errorf("%w: invalid restart %q for app %q in group %q: must be %q or %q", ErrConfigValidation, a.Restart, a.Name, g.Name, RestartNo, RestartOnFailure)
+			}
+
 			for _, pattern := range a.Watch.Exclude {
 				if _, err := regexp.Compile(pattern); err != nil {
 					return fmt.Errorf("%w: invalid exclude pattern %q for app %q in group %q: %s", ErrConfigValidation, pattern, a.Name, g.Name, err)

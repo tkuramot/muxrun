@@ -21,10 +21,23 @@ type Group struct {
 }
 
 type App struct {
-	Name  string
-	Cmd   string
-	Watch WatchConfig
+	Name    string
+	Cmd     string
+	Watch   WatchConfig
+	Restart RestartPolicy
 }
+
+// RestartPolicy decides whether the watch daemon brings an app back after it
+// exits on its own.
+type RestartPolicy string
+
+const (
+	// RestartNo leaves an exited app alone. It is the default.
+	RestartNo RestartPolicy = "no"
+	// RestartOnFailure restarts an app that exited non-zero or died on a
+	// signal it did not get from the user.
+	RestartOnFailure RestartPolicy = "on-failure"
+)
 
 type WatchConfig struct {
 	Enabled bool
@@ -43,8 +56,9 @@ type rawGroup struct {
 }
 
 type rawApp struct {
-	Name string `toml:"name"`
-	Cmd  string `toml:"cmd"`
+	Name    string `toml:"name"`
+	Cmd     string `toml:"cmd"`
+	Restart string `toml:"restart"`
 	// watch is documented in both a shorthand and a table form, so it is
 	// decoded loosely and converted by parseWatch.
 	Watch any `toml:"watch"`
@@ -132,10 +146,15 @@ func convertRawConfig(raw *rawConfig, configDir string) (*Config, error) {
 			if err != nil {
 				return nil, err
 			}
+			restart := RestartPolicy(ra.Restart)
+			if restart == "" {
+				restart = RestartNo
+			}
 			g.Apps = append(g.Apps, App{
-				Name:  ra.Name,
-				Cmd:   ra.Cmd,
-				Watch: watch,
+				Name:    ra.Name,
+				Cmd:     ra.Cmd,
+				Watch:   watch,
+				Restart: restart,
 			})
 		}
 		cfg.Groups = append(cfg.Groups, g)

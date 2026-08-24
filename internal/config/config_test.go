@@ -74,6 +74,24 @@ func TestLoad_WatchInvalidType(t *testing.T) {
 	}
 }
 
+func TestLoad_Restart(t *testing.T) {
+	cfg, err := Load("../../testdata/restart.toml")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	apps := cfg.Groups[0].Apps
+	if apps[0].Restart != RestartOnFailure {
+		t.Errorf("expected restart %q, got %q", RestartOnFailure, apps[0].Restart)
+	}
+	if apps[1].Restart != RestartNo {
+		t.Errorf("expected restart %q, got %q", RestartNo, apps[1].Restart)
+	}
+	if apps[2].Restart != RestartNo {
+		t.Errorf("expected restart to default to %q, got %q", RestartNo, apps[2].Restart)
+	}
+}
+
 func TestLoad_InvalidSyntax(t *testing.T) {
 	_, err := Load("../../testdata/invalid_syntax.toml")
 	if err == nil {

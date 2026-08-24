@@ -1,0 +1,17 @@
+[[group]]
+name = "test"
+dir = "/tmp/test"
+
+  [[group.app]]
+  name = "api"
+  cmd = "go run main.go"
+  restart = "on-failure"
+
+  [[group.app]]
+  name = "worker"
+  cmd = "go run worker.go"
+  restart = "no"
+
+  [[group.app]]
+  name = "once"
+  cmd = "echo hello"
