@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -22,6 +24,7 @@ type Client interface {
 	KillSession(name string) error
 	ListSessions() ([]Session, error)
 	NewWindow(session, window, dir string) error
+	RespawnWindow(session, window, dir, cmd string) error
 	KillWindow(session, window string) error
 	ListWindows(session string) ([]Window, error)
 	SendKeys(session, window, keys string) error
@@ -46,6 +49,7 @@ type Window struct {
 
 type client struct {
 	tmuxPath string
+	shell    string
 }
 
 func NewClient() (Client, error) {
@@ -118,6 +122,58 @@ func (c *client) NewWindow(session, window, dir string) error {
 func (c *client) KillWindow(session, window string) error {
 	_, err := c.run("kill-window", "-t", session+":"+window)
 	return err
+}
+
+// RespawnWindow restarts the window's pane with cmd, killing whatever is
+// running there first. Unlike SendKeys it also works on a pane left dead by
+// remain-on-exit, and the command becomes the pane process itself rather than
+// a child of an interactive shell.
+func (c *client) RespawnWindow(session, window, dir, cmd string) error {
+	args := []string{"respawn-window", "-k", "-t", session + ":" + window}
+	if dir != "" {
+		args = append(args, "-c", dir)
+	}
+	args = append(args, c.shellCommand(cmd))
+	_, err := c.run(args...)
+	return err
+}
+
+// loginShells are the shells muxrun knows how to start as an interactive
+// login shell. Other shells are given -c only, since -l and -i are not
+// portable across every /bin/sh.
+var loginShells = map[string]bool{"bash": true, "zsh": true, "fish": true}
+
+// shellCommand wraps cmd so it runs with the environment it used to get when
+// muxrun typed the command into the pane's interactive login shell: rc files,
+// PATH set up by version managers, aliases. exec avoids an extra process
+// layer, keeping pane_pid on the command itself.
+func (c *client) shellCommand(cmd string) string {
+	shell := c.defaultShell()
+	flags := "-c"
+	if loginShells[filepath.Base(shell)] {
+		flags = "-lic"
+	}
+	return fmt.Sprintf("exec %s %s %s", shellQuote(shell), flags, shellQuote(cmd))
+}
+
+// defaultShell reports the shell tmux would use for a new pane, which is the
+// shell muxrun commands used to run under.
+func (c *client) defaultShell() string {
+	if c.shell != "" {
+		return c.shell
+	}
+	if out, err := c.run("show-option", "-gv", "default-shell"); err == nil && out != "" {
+		c.shell = out
+	} else if sh := os.Getenv("SHELL"); sh != "" {
+		c.shell = sh
+	} else {
+		c.shell = "/bin/sh"
+	}
+	return c.shell
+}
+
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }
 
 func (c *client) ListWindows(session string) ([]Window, error) {

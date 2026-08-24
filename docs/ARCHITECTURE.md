@@ -115,7 +115,7 @@ Timer (500ms): [==X [==X  [=========]→ callback fires
 
 1. Each `Trigger()` cancels the existing timer and starts a new 500ms timer
 2. If no new `Trigger()` occurs within 500ms, the callback fires
-3. The callback sends `C-c` to the tmux window → waits 100ms → resends the command to restart the process
+3. The callback runs `respawn-window -k` on the tmux window, which kills the running process and starts the command again — this also revives a pane that `remain-on-exit` left dead after a crash
 4. `sync.Mutex` protects timer operations for thread safety
 
 ---

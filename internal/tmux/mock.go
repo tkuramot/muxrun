@@ -4,6 +4,15 @@ package tmux
 type MockClient struct {
 	Sessions          map[string][]Window
 	CapturePaneOutput map[string]string
+	Respawns          []RespawnCall
+}
+
+// RespawnCall records the arguments of a RespawnWindow call.
+type RespawnCall struct {
+	Session string
+	Window  string
+	Dir     string
+	Cmd     string
 }
 
 func NewMockClient() *MockClient {
@@ -40,6 +49,19 @@ func (m *MockClient) ListSessions() ([]Session, error) {
 
 func (m *MockClient) NewWindow(session, window, dir string) error {
 	m.Sessions[session] = append(m.Sessions[session], Window{Name: window})
+	return nil
+}
+
+func (m *MockClient) RespawnWindow(session, window, dir, cmd string) error {
+	m.Respawns = append(m.Respawns, RespawnCall{Session: session, Window: window, Dir: dir, Cmd: cmd})
+	windows := m.Sessions[session]
+	for i, w := range windows {
+		if w.Name == window {
+			windows[i].Dead = false
+			windows[i].Dir = dir
+			return nil
+		}
+	}
 	return nil
 }
 

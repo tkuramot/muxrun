@@ -105,9 +105,13 @@ func Run(configPath, groupName string) error {
 			if err != nil || !hasWin {
 				return
 			}
-			tmuxClient.SendKeys(session, appName, "C-c")
-			time.Sleep(100 * time.Millisecond)
-			tmuxClient.SendKeys(session, appName, appCmd+"; exit $?")
+			// respawn-window kills the running process and starts the command
+			// again in one step. It also revives a pane that remain-on-exit
+			// left dead, which send-keys silently fails to do.
+			if err := tmuxClient.RespawnWindow(session, appName, group.Dir, appCmd); err != nil {
+				log.Printf("failed to restart %s/%s: %v", groupName, appName, err)
+				return
+			}
 			log.Printf("restarted %s/%s", groupName, appName)
 		})
 		debouncers = append(debouncers, d)

@@ -109,3 +109,39 @@ func TestParseWindowLine(t *testing.T) {
 		})
 	}
 }
+
+func TestShellCommand(t *testing.T) {
+	tests := []struct {
+		name     string
+		shell    string
+		cmd      string
+		expected string
+	}{
+		{
+			name:     "login shell gets rc files",
+			shell:    "/bin/zsh",
+			cmd:      "npm run dev",
+			expected: `exec '/bin/zsh' -lic 'npm run dev'`,
+		},
+		{
+			name:     "unknown shell runs with -c only",
+			shell:    "/bin/sh",
+			cmd:      "npm run dev",
+			expected: `exec '/bin/sh' -c 'npm run dev'`,
+		},
+		{
+			name:     "single quotes in the command are escaped",
+			shell:    "/bin/bash",
+			cmd:      `echo 'hi there'`,
+			expected: `exec '/bin/bash' -lic 'echo '\''hi there'\'''`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &client{shell: tt.shell}
+			if got := c.shellCommand(tt.cmd); got != tt.expected {
+				t.Errorf("shellCommand(%q) = %q, want %q", tt.cmd, got, tt.expected)
+			}
+		})
+	}
+}
