@@ -80,7 +80,7 @@ dir = "."
   cmd = "go run main.go"
 ```
 
-### Full example with file watching
+### Full example with file watching and restarts
 
 ```toml
 [[group]]
@@ -95,6 +95,7 @@ dir = "."
   [[group.app]]
   name = "worker"
   cmd = "go run worker.go"
+  restart = "on-failure"
 
 [[group]]
 name = "frontend"
@@ -107,9 +108,9 @@ dir = "./frontend"
 
 ### Fields
 
-See [docs/config.md](docs/config.md) for the full field reference, watch configuration, and validation rules.
+See [docs/config.md](docs/config.md) for the full field reference, watch and restart configuration, and validation rules.
 
-When `watch` is enabled, muxrun starts a background daemon that restarts the app on file changes. The daemon starts with `muxrun up` and stops with `muxrun down`.
+When `watch` is enabled or `restart = "on-failure"` is set, muxrun starts a background daemon for the group. It restarts apps on file changes, and brings back an app that fails — backing off up to 30s and giving up after 5 consecutive failures, which `muxrun ps` reports as `failed`. An app you stop yourself with Ctrl-C stays stopped. The daemon starts with `muxrun up` and stops with `muxrun down`.
 
 ## Usage
 
@@ -131,7 +132,7 @@ muxrun down backend                 # Stop a specific group
 ```
 
 > [!WARNING]
-> Use `muxrun down` to stop sessions. Killing sessions directly with `tmux kill-session` may leave file watch daemons running.
+> Use `muxrun down` to stop sessions. Killing sessions directly with `tmux kill-session` may leave daemons running.
 
 ### `muxrun ps` — Check status
 

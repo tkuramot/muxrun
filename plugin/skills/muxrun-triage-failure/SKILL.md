@@ -18,7 +18,9 @@ Find the failing app(s) automatically — do not make the user name them — the
 1. **Get the current state.** Run `muxrun ps`. The output is a table; columns include the group, app, status, PID, and elapsed time. Treat as failures any row that is:
    - Not running (process gone),
    - Recently exited (small "elapsed since exit" → restart loop),
-   - Showing repeated short uptimes across consecutive `ps` calls.
+   - Showing repeated short uptimes across consecutive `ps` calls,
+   - `failed (...)` — the daemon restarted a `restart = "on-failure"` app five times and gave up; the exit status shown is the one from the last attempt,
+   - Carrying a restart count, e.g. `running (4 restarts)` — the app is up but has been crashing.
 
    If `ps` shows nothing, run `muxrun check` first — the config may not resolve.
 
@@ -27,7 +29,8 @@ Find the failing app(s) automatically — do not make the user name them — the
    - Otherwise enumerate all failing rows and proceed in parallel.
 
 3. **Pull logs for each failing app.** Use `muxrun logs <group> <app>` (without `--follow`) to grab the current pane buffer. This is the captured tmux pane output — it contains everything the app has printed since launch (or since the last restart).
-   - For watch-enabled apps, also read the daemon log: `$TMPDIR/muxrun/daemon-<group>.log` — it records the restart cycle and fsnotify events.
+   - For watch- or restart-enabled apps, also read the daemon log: `$TMPDIR/muxrun/daemon-<group>.log` — it records fsnotify events, every failure restart with its exit status ("restarted g/a (exit 1, attempt 3/5)"), and the point where the daemon gave up.
+   - A restarted pane's buffer only holds output since the last attempt. Earlier crashes are gone — the daemon log is what tells you how long it has been failing.
 
 4. **Analyze.** Look for:
    - Stack traces / panics / unhandled exceptions (last one is usually the cause).
@@ -47,6 +50,7 @@ Find the failing app(s) automatically — do not make the user name them — the
 ## Edge cases
 
 - **Nothing is failing.** `muxrun ps` shows everything healthy but the user disagrees. Ask what they expected; check the actual app behavior (HTTP probe, log content) rather than just process state.
+- **App keeps being restarted.** For a `restart = "on-failure"` app, the fix is in the app or its `cmd`, not in the policy. Ctrl-C in the pane does not fight the daemon: a signalled pane is left dead on purpose, so it is safe to stop an app by hand while investigating.
 - **App is "running" but unresponsive.** Process alive but no recent log output and request hangs. Check the log buffer for the last meaningful line; suggest a manual `kill` + restart and watch for the same hang.
 - **No logs at all.** App may exit before printing. Wrap the command temporarily with `sh -c '... 2>&1; echo EXIT=$?; sleep 1'` to capture the exit code, or run `cmd` directly in a terminal to see startup output.
 

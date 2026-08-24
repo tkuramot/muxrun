@@ -19,7 +19,7 @@ muxrun/
 │   ├── config/     # TOML config loading and validation
 │   ├── tmux/       # tmux client interface and implementation
 │   ├── watcher/    # File system watching, debouncing, exclude filters
-│   ├── daemon/     # File-watch daemon spawning and PID management
+│   ├── daemon/     # Watch/restart daemon spawning, supervision, PID management
 │   ├── runner/     # App start/stop/status orchestration
 │   └── ui/         # Table formatting for output
 ├── docs/           # Documentation
@@ -45,10 +45,11 @@ muxrun/
                       ▼
 ┌──────────────────────────┐  ┌────────────────────────────┐
 │ internal/runner/         │  │ internal/daemon/            │
-│ (Application)            │  │ (File Watch Daemon)         │
+│ (Application)            │  │ (Watch / Restart Daemon)    │
 │ - App start/stop         │  │ - Daemon process spawning   │
 │ - Concurrent app control │  │ - PID file management       │
 └───────┬──────────────────┘  │ - File change → app restart │
+        │                     │ - Failure → app restart     │
         │                     └──────┬─────────────────────┘
         │                            │
         ▼                            ▼
@@ -72,7 +73,7 @@ muxrun/
 
 ### Independent daemon process per group
 
-`muxrun up` spawns a separate daemon process for each group that requires file watching.
+`muxrun up` spawns a separate daemon process for each group that has an app with `watch` enabled or `restart = "on-failure"`.
 
 ```
 muxrun up
@@ -117,6 +118,27 @@ Timer (500ms): [==X [==X  [=========]→ callback fires
 2. If no new `Trigger()` occurs within 500ms, the callback fires
 3. The callback runs `respawn-window -k` on the tmux window, which kills the running process and starts the command again — this also revives a pane that `remain-on-exit` left dead after a crash
 4. `sync.Mutex` protects timer operations for thread safety
+
+### Restart supervisor
+
+tmux cannot push pane deaths to a client, so the daemon polls `list-windows` once a second per group and decides what to do with each `restart = "on-failure"` app from the pane's dead status and signal.
+
+```
+tick (1s)
+  → pane alive         → nothing (10s alive resets the retry budget)
+  → exit 0             → nothing
+  → SIGINT/TERM/HUP/QUIT → nothing (the user stopped it)
+  → exit != 0, SIGKILL, other signals
+      → within backoff (1s, 2s, 4s, ... 30s)? → wait
+      → 5 consecutive failures?               → give up, mark the window failed
+      → otherwise                             → respawn-window -k
+```
+
+The decision is a pure function (`decide` in `supervisor.go`) so the policy is testable without a tmux server.
+
+Per-app state lives in two places. Consecutive failures, the backoff deadline and the give-up flag are daemon memory. The restart count and the give-up mark are written to the window as `@muxrun_restarts` and `@muxrun_restart_state` user options, which `muxrun ps` reads in the same `list-windows` call it already makes: they live and die with the window, so `muxrun up` resets them without any file to clean up.
+
+Watch restarts go through the same supervisor, which serializes them against failure restarts on a per-group mutex and gives a rebuilt app a fresh retry budget.
 
 ---
 

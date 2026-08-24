@@ -41,18 +41,20 @@ If a `muxrun.toml` already exists, ask whether to overwrite, augment, or abort b
    - When enabling watch, add an `exclude` list. Always start from project signals: read `.gitignore`, look for `node_modules/`, `dist/`, `build/`, `.next/`, `target/`, `vendor/`, `__pycache__/`, test fixtures (`testdata/`), generated mocks. Exclude patterns are Go regex matched against paths relative to the group `dir`.
    - Common defaults to consider: `_test\\.go$`, `mock_.*\\.go$`, `\\.tmp$`, `node_modules/`, `\\.next/`, `dist/`, `target/`.
 
-5. **Write `muxrun.toml`.** Place it at the repository root (or wherever the user is). Use relative `dir = "."` style paths so the config travels well across worktrees (see `docs/config.md`). Naming rules: group/app names must match `^[a-zA-Z0-9_-]+$` with no duplicates within scope.
+5. **Decide restart settings.** Set `restart = "on-failure"` for long-running processes the user wants kept alive — servers and workers that die on a transient failure (a dependency not up yet, a port briefly taken). Leave it unset (`"no"`) for one-shot commands, anything the user watches interactively, and processes that already supervise themselves. muxrun backs off and gives up after 5 consecutive failures, so a genuinely broken command still surfaces in `muxrun ps` as `failed` rather than looping forever.
 
-6. **Validate.** Run `muxrun check` (or `muxrun -c <path> check`). Fix any reported errors. If `muxrun check` is unavailable, validate by re-reading the file and confirming the rules in `docs/config.md`.
+6. **Write `muxrun.toml`.** Place it at the repository root (or wherever the user is). Use relative `dir = "."` style paths so the config travels well across worktrees (see `docs/config.md`). Naming rules: group/app names must match `^[a-zA-Z0-9_-]+$` with no duplicates within scope.
 
-7. **Report.** Show the user:
+7. **Validate.** Run `muxrun check` (or `muxrun -c <path> check`). Fix any reported errors. If `muxrun check` is unavailable, validate by re-reading the file and confirming the rules in `docs/config.md`.
+
+8. **Report.** Show the user:
    - The generated config and where it was written.
    - Apps you considered but skipped, with one-line reasons (e.g., "ran tests, not a long-running process").
    - Suggested next step: `muxrun up`.
 
 ## Reference
 
-The full configuration schema, validation rules, and watch semantics are in [`config.md`](./config.md) (symlink to the canonical docs). Treat that file as the source of truth — do not invent fields.
+The full configuration schema, validation rules, and watch and restart semantics are in [`config.md`](./config.md) (symlink to the canonical docs). Treat that file as the source of truth — do not invent fields.
 
 ## Anti-patterns
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What is muxrun
 
-A Go CLI tool that launches and manages multiple applications in groups using tmux. Each group maps to a tmux session, each app to a tmux window. Supports file watching with auto-restart via background daemons.
+A Go CLI tool that launches and manages multiple applications in groups using tmux. Each group maps to a tmux session, each app to a tmux window. Supports file watching with auto-restart, and restart-on-failure supervision, via background daemons.
 
 ## Build & Test
 
@@ -52,7 +52,7 @@ The `HOMEBREW_TAP_GITHUB_TOKEN` secret must be set on the repo for the Homebrew 
 - **`internal/runner/`** — Core orchestration logic. `Runner` takes a `config.Config` and a `tmux.Client` interface, coordinates starting/stopping apps and querying status.
 - **`internal/tmux/`** — `Client` interface wrapping tmux shell commands. Has a mock implementation (`mock.go`) for unit testing.
 - **`internal/config/`** — TOML config loading and validation. Config resolution: `--config` flag → `muxrun.toml` walking up from CWD. User-level CLI flag defaults in `~/.config/muxrun/config.toml`. Uses raw types for unmarshaling then converts to domain types.
-- **`internal/daemon/`** — File-watch daemon lifecycle. `Spawn()` forks a detached `_daemon` process; `Run()` is the daemon main loop. PID files stored in `$TMPDIR/muxrun/`.
+- **`internal/daemon/`** — Daemon lifecycle for file watching and restart-on-failure. `Spawn()` forks a detached `_daemon` process; `Run()` is the daemon main loop; `supervisor.go` polls tmux for dead panes and restarts them with backoff. PID files stored in `$TMPDIR/muxrun/`.
 - **`internal/watcher/`** — File system watcher (fsnotify) with exclude filters and debouncing.
 - **`internal/ui/`** — Table formatting for `ps` output.
 
